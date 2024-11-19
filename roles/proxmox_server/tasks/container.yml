@@ -1,0 +1,63 @@
+- name: Stop existing {{ container.name }}
+  community.general.proxmox:
+    vmid: '{{ container.vmid }}'
+    node: root
+    api_host: '{{ host_proxmox.host }}'
+    api_user: '{{ host_proxmox.user }}'
+    api_password: "{{ host_proxmox.password }}"
+    state: stopped
+  ignore_errors: True
+  when: host_proxmox.force is defined
+
+- name: Remove if {{ container.name }} exists
+  community.general.proxmox:
+    vmid: '{{ container.vmid }}'
+    node: root
+    api_host: '{{ host_proxmox.host }}'
+    api_user: '{{ host_proxmox.user }}'
+    api_password: "{{ host_proxmox.password }}"
+    state: absent
+  when: host_proxmox.force is defined
+
+- name: container {{ container.name }} exists
+  community.general.proxmox:
+    vmid: '{{ container.vmid }}'
+    node: root
+    api_host: '{{ host_proxmox.host }}'
+    api_user: '{{ host_proxmox.user }}'
+    api_password: "{{ host_proxmox.password }}"
+    hostname: "{{ container.hostname }}"
+    storage: local-lvm
+    ostemplate: 'local:vztmpl/fedora-40-default_20240909_amd64.tar.xz'
+    pubkey: "{{ host_general.pubkey }}"
+    password: "{{ host_proxmox.password }}"
+    disk: '{{ container.disk }}'
+    cores: '{{ container.cores }}'
+    memory: '{{ container.memory }}'
+    swap: 0
+    unprivileged: False
+    onboot: True
+    state: present
+    netif:
+      net0: "name=eth0,gw={{ general.gateway }},ip={{ container.ip_address }}/24,bridge=vmbr0"
+
+- name: container {{ container.name }} is running
+  community.general.proxmox:
+    vmid: '{{ container.vmid }}'
+    api_host: '{{ host_proxmox.host }}'
+    api_user: '{{ host_proxmox.user }}'
+    api_password: "{{ host_proxmox.password }}"
+    state: started
+
+- name: Check if ansible is installed on {{ container.name }}
+  ansible.builtin.shell: pct exec {{ container.vmid }} -- dnf list --installed -q openssh-server
+  register: result
+  ignore_errors: True
+  changed_when: False
+
+- name: Install ansible on {{ container.name }}
+  ansible.builtin.shell: |
+    pct push {{ container.vmid }} /opt/setup.sh /opt/setup.sh
+    pct exec {{ container.vmid }} -- chmod +x /opt/setup.sh
+    pct exec {{ container.vmid }} -- /opt/setup.sh
+  when: result is failed

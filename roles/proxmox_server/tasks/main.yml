@@ -1,0 +1,29 @@
+---
+- name: Ensure snippets dir exists
+  file: 
+    path: "/var/lib/vz/snippets/"
+    state: directory
+
+- name: Upload container init script
+  copy:
+    dest: /opt/setup.sh
+    content: |
+      #!/bin/bash
+      dnf -y install openssh-server sudo
+      systemctl enable sshd
+      useradd -m -s /bin/bash ansible
+      usermod -a -G wheel ansible
+      mkdir -p /home/ansible/.ssh/
+      cp /root/.ssh/authorized_keys /home/ansible/.ssh/
+      chown -R ansible:ansible /home/ansible/.ssh/authorized_keys 
+      systemctl start sshd
+    mode: '0755'
+
+- name: Create containers
+  ansible.builtin.include_tasks: 'container.yml'
+  vars:
+    host_general: "{{ general }}"
+    host_proxmox: "{{ proxmox }}"
+    container: "{{ item }}"
+    
+  loop: "{{ containers }}"

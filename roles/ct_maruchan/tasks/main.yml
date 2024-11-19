@@ -1,0 +1,8 @@
+---
+
+- name: Prepare services
+  dnf:
+    name:
+    - podman
+    - cockpit
+    state: latest
