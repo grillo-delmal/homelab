@@ -1,0 +1,28 @@
+acl trusted {
+{% for item in dns.trusted %}
+    {{ item }};
+{% endfor %}
+};
+
+options {
+    forwarders {
+{% for item in dns.forwarders %}
+        {{ item }};
+{% endfor %}
+    };
+    directory "/var/named";
+    dump-file "/var/named/data/cache_dump.db";
+    statistics-file "/var/named/data/named_stats.txt";
+    memstatistics-file "/var/named/data/named_mem_stats.txt";
+    secroots-file "/var/named/data/named.secroots";
+    recursing-file "/var/named/data/named.recursing";
+
+    allow-query { trusted; };
+    recursion yes;
+    dnssec-validation no;
+};
+
+zone "{{ domain }}" IN {
+    type master;
+    file "/var/named/{{ domain }}.zone";
+};

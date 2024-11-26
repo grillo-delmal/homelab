@@ -1,0 +1,24 @@
+---
+
+- name: Prepare services
+  dnf:
+    name:
+    - bind
+    state: present
+
+- name: Configure bind
+  template:
+    src: named.conf.j2
+    dest: /etc/named.conf
+
+- name: Create zone
+  template:
+    src: main.zone.j2
+    dest: /var/named/{{ domain }}.zone
+
+- name: Start BIND
+  systemd:
+    name: named.service
+    state: started
+    enabled: True
+

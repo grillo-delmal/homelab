@@ -7,7 +7,7 @@
 
     general:
       pubkey: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_ed25519.pub') }}"
-      gateway: '{{ gateway_ip }}'
+      gateway: "{{ homelab_gateway_ip }}"
 
     proxmox:
       user: "root@pam"
@@ -15,26 +15,57 @@
       password: "{{ proxmox_password }}"
 
     containers:
-    - name: ct_maruchan
+    - name: ct_dns
       vmid: 100
-      hostname: "{{ hostvars['ct_maruchan'].ct_hostname }}"
+      hostname: "{{ hostvars['ct_dns'].ns_name }}.{{ homelab_domain }}"
+      ip_address: "{{ hostvars['ct_dns'].ansible_host }}"
+      disk: 'local-lvm:4'
+      cores: 1
+      memory: 512
+
+    - name: ct_maruchan
+      vmid: 101
+      hostname: "{{ hostvars['ct_maruchan'].ns_name }}.{{ homelab_domain }}"
       ip_address: "{{ hostvars['ct_maruchan'].ansible_host }}"
       disk: 'local-lvm:4'
       cores: 1
       memory: 1024
 
     - name: ct_ai
-      vmid: 101
-      hostname: "{{ hostvars['ct_maruchan'].ct_hostname }}"
+      vmid: 102
+      hostname: "{{ hostvars['ct_ai'].ns_name }}.{{ homelab_domain }}"
       ip_address: "{{ hostvars['ct_ai'].ansible_host }}"
       disk: 'local-lvm:8'
       cores: 4
       memory: 6144
 
-- hosts: ct_ai
+- hosts: ct_dns
   roles:
-  - role: ct_ai
+  - role: ct_dns
+    domain: "{{ homelab_domain }}"
+    dns: "{{ homelab_dns }}"
+    servers: |
+      {{
+        groups['servers'] | 
+          map('extract', hostvars) | 
+          map('dict2items') | 
+          map('selectattr', 'key', 'in', ['ansible_host', 'ns_name']) | 
+          map('items2dict')
+      }}
+    containers: |
+      {{
+        groups['containers'] |
+          map('extract', hostvars) |
+          map('dict2items') |
+          map('selectattr', 'key', 'in', ['ansible_host', 'ns_name']) |
+          map('items2dict')
+      }}
 
 - hosts: ct_maruchan
   roles:
   - role: ct_maruchan
+
+- hosts: ct_ai
+  roles:
+  - role: ct_ai
+
