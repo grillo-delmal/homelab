@@ -9,7 +9,7 @@
     dest: /opt/setup.sh
     content: |
       #!/bin/bash
-      dnf -y install openssh-server sudo
+      dnf -y install openssh-server sudo python3 python3-libdnf5
       systemctl enable sshd
       useradd -m -s /bin/bash ansible
       usermod -a -G wheel ansible

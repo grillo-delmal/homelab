@@ -26,16 +26,17 @@
     api_host: '{{ host_proxmox.host }}'
     api_user: '{{ host_proxmox.user }}'
     api_password: "{{ host_proxmox.password }}"
-    hostname: "{{ container.hostname }}"
+    hostname: "{{ container.hostname | default(omit) }}"
     storage: local-lvm
-    ostemplate: 'local:vztmpl/fedora-40-default_20240909_amd64.tar.xz'
-    pubkey: "{{ host_general.pubkey }}"
-    password: "{{ host_proxmox.password }}"
-    disk: '{{ container.disk }}'
-    cores: '{{ container.cores }}'
-    memory: '{{ container.memory }}'
+    ostemplate: 'local:vztmpl/fedora-41-default_20241118_amd64.tar.xz'
+    pubkey: "{{ host_general.pubkey | default(omit) }}"
+    password: "{{ host_proxmox.password | default(omit) }}"
+    disk: '{{ container.disk | default(omit) }}'
+    cores: '{{ container.cores | default(omit) }}'
+    memory: '{{ container.memory | default(omit) }}'
     swap: 0
-    unprivileged: False
+    unprivileged: '{{ container.unprivileged | default(omit) }}'
+    features: '{{ container.features | default(omit) }}'
     onboot: True
     state: present
     netif:

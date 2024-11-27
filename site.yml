@@ -22,6 +22,7 @@
       disk: 'local-lvm:4'
       cores: 1
       memory: 512
+      unprivileged: False
 
     - name: ct_maruchan
       vmid: 101
@@ -30,6 +31,9 @@
       disk: 'local-lvm:4'
       cores: 1
       memory: 1024
+      unprivileged: True
+      features:
+        - nesting=1
 
     - name: ct_ai
       vmid: 102
@@ -37,7 +41,10 @@
       ip_address: "{{ hostvars['ct_ai'].ansible_host }}"
       disk: 'local-lvm:8'
       cores: 4
-      memory: 6144
+      memory: 2048
+      unprivileged: True
+      features:
+        - nesting=1
 
 - hosts: ct_dns
   roles:
