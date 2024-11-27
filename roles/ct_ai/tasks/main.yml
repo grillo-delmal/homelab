@@ -6,3 +6,14 @@
       - podman
       - ramalama
     state: latest
+
+- name: Check if ramalama is running
+  ansible.builtin.shell: podman container inspect local_ai
+  register: result
+  ignore_errors: True
+  changed_when: False
+
+- name: Run ramalama
+  ansible.builtin.shell: ramalama serve -d --name local_ai llama3.2:3b
+  when: result is failed
+    
