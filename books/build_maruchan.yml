@@ -8,6 +8,7 @@
     general:
       pubkey: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_ed25519.pub') }}"
       gateway: "{{ homelab_gateway_ip }}"
+      domain: "{{ homelab_domain }}"
 
     proxmox:
       user: "root@pam"
@@ -15,22 +16,10 @@
       password: "{{ proxmox_password }}"
       force: "{{ proxmox_force | default(False) }}"
 
-    containers:
-    - vmid: 101
-      hostname: "{{ 
-        (groups['app_maruchan'] |
-          intersect(groups['containers']) |
-          map('extract', hostvars))[0].ns_name }}.{{ homelab_domain }}"
-      ip_address: "{{ 
-        (groups['app_maruchan'] |
-          intersect(groups['containers']) |
-          map('extract', hostvars))[0].ansible_host }}"
-      disk: 'local-lvm:4'
-      cores: 1
-      memory: 1024
-      unprivileged: True
-      features:
-        - nesting=1
+    containers: "{{ 
+      groups['app_maruchan'] |
+        intersect(groups['containers']) |
+        map('extract', hostvars) }}"
 
 - hosts: app_maruchan:&containers
   roles:

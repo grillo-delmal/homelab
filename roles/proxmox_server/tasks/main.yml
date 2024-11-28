@@ -25,5 +25,4 @@
     host_general: "{{ general }}"
     host_proxmox: "{{ proxmox }}"
     container: "{{ item }}"
-    
   loop: "{{ containers }}"

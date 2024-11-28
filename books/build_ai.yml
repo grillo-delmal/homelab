@@ -8,6 +8,7 @@
     general:
       pubkey: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_ed25519.pub') }}"
       gateway: "{{ homelab_gateway_ip }}"
+      domain: "{{ homelab_domain }}"
 
     proxmox:
       user: "root@pam"
@@ -15,21 +16,10 @@
       password: "{{ proxmox_password }}"
       force: "{{ proxmox_force | default(False) }}"
 
-    containers:
-    - vmid: 102
-      hostname: "{{ 
-        (groups['app_ai'] |
-          intersect(groups['containers']) |
-          map('extract', hostvars))[0].ns_name }}.{{ homelab_domain }}"
-      ip_address: "{{ (groups['app_ai'] |
-          intersect(groups['containers']) |
-          map('extract', hostvars))[0].ansible_host }}"
-      disk: 'local-lvm:8'
-      cores: 4
-      memory: 4096
-      unprivileged: True
-      features:
-        - nesting=1
+    containers: "{{ 
+      groups['app_ai'] |
+        intersect(groups['containers']) |
+        map('extract', hostvars) }}"
 
 - hosts: app_ai:&containers
   roles:
