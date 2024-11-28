@@ -24,3 +24,11 @@
 - hosts: app_maruchan:&containers
   roles:
   - role: maruchan
+    config: "{{ maruchan_config }}"
+    ai_url: "http://{{ 
+      (groups['app_ai'] |
+        intersect(groups['containers']) |
+        map('extract', hostvars))[0].ns_name }}.{{ homelab_domain }}:8080"
+    starbound_config:
+      hostname: starbound
+      port: 21026

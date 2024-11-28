@@ -29,9 +29,14 @@
 
 - name: Add config
   copy:
-    src: maruchan/config.json
-    dest: /data/config.json
+    dest: /opt/setup.sh
+    content: "{{ 
+      config | 
+        combine({'maruai':{'hostname': ai_url}}) |
+        combine({'starbound': starbound_config}) |
+        to_json(indent=4, sort_keys=True) }}"
     mode: '0644'
+  register: config_change
 
 - name: Build Image
   containers.podman.podman_image:
@@ -43,7 +48,7 @@
   containers.podman.podman_container:
     name: maruchan
     state: absent
-  when: image_built is changed
+  when: image_built is changed or config_change is changed
 
 - name: Run maruchan
   containers.podman.podman_container:

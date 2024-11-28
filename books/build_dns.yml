@@ -25,7 +25,7 @@
   roles:
   - role: dns
     domain: "{{ homelab_domain }}"
-    dns: "{{ homelab_dns }}"
+    dns: "{{ dns_config }}"
     servers: |
       {{
         groups['servers'] | 
