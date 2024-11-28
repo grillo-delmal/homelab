@@ -1,9 +1,4 @@
 ---
-- name: Ensure snippets dir exists
-  file: 
-    path: "/var/lib/vz/snippets/"
-    state: directory
-
 - name: Upload container init script
   copy:
     dest: /opt/setup.sh
