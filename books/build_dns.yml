@@ -14,7 +14,7 @@
       user: "root@pam"
       host: "{{ ansible_host }}"
       password: "{{ proxmox_password }}"
-      force: "{{ proxmox_force | default(False) }}"
+      force: "{{ proxmox_force | default(True) }}"
 
     containers: "{{ 
       groups['app_dns'] |
