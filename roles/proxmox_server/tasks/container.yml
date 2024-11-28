@@ -1,4 +1,4 @@
-- name: Stop existing {{ container.name }}
+- name: Stop existing {{ container.hostname }}
   community.general.proxmox:
     vmid: '{{ container.vmid }}'
     node: root
@@ -7,9 +7,9 @@
     api_password: "{{ host_proxmox.password }}"
     state: stopped
   ignore_errors: True
-  when: host_proxmox.force is defined
+  when: host_proxmox.force
 
-- name: Remove if {{ container.name }} exists
+- name: Remove if {{ container.hostname }} exists
   community.general.proxmox:
     vmid: '{{ container.vmid }}'
     node: root
@@ -17,9 +17,9 @@
     api_user: '{{ host_proxmox.user }}'
     api_password: "{{ host_proxmox.password }}"
     state: absent
-  when: host_proxmox.force is defined
+  when: host_proxmox.force
 
-- name: container {{ container.name }} exists
+- name: container {{ container.hostname }} exists
   community.general.proxmox:
     vmid: '{{ container.vmid }}'
     node: root
@@ -30,7 +30,7 @@
     storage: local-lvm
     ostemplate: 'local:vztmpl/fedora-41-default_20241118_amd64.tar.xz'
     pubkey: "{{ host_general.pubkey | default(omit) }}"
-    password: "{{ host_proxmox.password | default(omit) }}"
+    password: "{{ container.password | default(host_proxmox.password) }}"
     disk: '{{ container.disk | default(omit) }}'
     cores: '{{ container.cores | default(omit) }}'
     memory: '{{ container.memory | default(omit) }}'
@@ -42,7 +42,7 @@
     netif:
       net0: "name=eth0,gw={{ general.gateway }},ip={{ container.ip_address }}/24,bridge=vmbr0"
 
-- name: container {{ container.name }} is running
+- name: container {{ container.hostname }} is running
   community.general.proxmox:
     vmid: '{{ container.vmid }}'
     api_host: '{{ host_proxmox.host }}'
@@ -50,13 +50,13 @@
     api_password: "{{ host_proxmox.password }}"
     state: started
 
-- name: Check if ansible is installed on {{ container.name }}
+- name: Check if ansible is installed on {{ container.hostname }}
   ansible.builtin.shell: pct exec {{ container.vmid }} -- dnf list --installed -q openssh-server
   register: result
   ignore_errors: True
   changed_when: False
 
-- name: Install ansible on {{ container.name }}
+- name: Install ansible on {{ container.hostname }}
   ansible.builtin.shell: |
     pct push {{ container.vmid }} /opt/setup.sh /opt/setup.sh
     pct exec {{ container.vmid }} -- chmod +x /opt/setup.sh

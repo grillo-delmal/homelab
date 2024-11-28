@@ -1,0 +1,9 @@
+---
+
+- name: Set to force
+  hosts: servers
+  tasks:
+    - name: Set fact
+      set_fact: 
+        proxmox_force: True
+- import_playbook: books/build_maruchan.yml

@@ -1,0 +1,54 @@
+---
+
+- name: Prepare services
+  dnf:
+    name:
+    - podman
+    - git
+    - cockpit
+    - cockpit-podman
+    state: latest
+
+- name: Start cockpit
+  service:
+    name: cockpit.socket
+    state: started
+    enabled: True
+
+- name: Download code
+  ansible.builtin.git:
+    repo: 'https://github.com/grillo-delmal/maruchan-discordbot.git'
+    dest: /opt/maruchan-discordbot
+    version: master
+
+- name: Create directory
+  ansible.builtin.file:
+    path: /data/
+    state: directory
+    mode: '0755'
+
+- name: Add config
+  copy:
+    src: maruchan/config.json
+    dest: /data/config.json
+    mode: '0644'
+
+- name: Build Image
+  containers.podman.podman_image:
+    name: localhost/maruchan
+    path: /opt/maruchan-discordbot
+  register: image_built
+
+- name: Stop maruchan if image built
+  containers.podman.podman_container:
+    name: maruchan
+    state: absent
+  when: image_built is changed
+
+- name: Run maruchan
+  containers.podman.podman_container:
+    name: maruchan
+    image: localhost/maruchan
+    volumes:
+      - "/data:/data:ro,Z"
+    state: started
