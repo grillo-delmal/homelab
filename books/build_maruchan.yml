@@ -1,7 +1,6 @@
 ---
 
 - hosts: app_maruchan:&servers
-  vars_files: secrets.yml
   roles:
   - role: proxmox_server
 
