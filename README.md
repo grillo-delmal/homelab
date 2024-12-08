@@ -8,10 +8,18 @@ This assumes that the servers have proxmox installed and that they can be manage
 
 ## Provision infrastructure
 
-This playbook will try to provision/update 
+This playbook will try to provision/update all the infrastructure.
 
 ```sh
 ansible-playbook site.yml
+```
+
+## Upgrade servers
+
+This playbook will try to upgrade all infra packages 
+
+```sh
+ansible-playbook books/upgrade_all.yml
 ```
 
 ## Rebuild specific app from scratch
