@@ -1,0 +1,45 @@
+---
+
+- hosts: servers
+  tasks:
+
+  - name: Manage SSL certs
+    include_role: 
+      name: letsencrypt
+
+  - name: Check src chain
+    stat:
+      path: "/etc/letsencrypt/certs/fullchain_{{ letsencrypt_domain_name }}.pem"
+    register: src_chain_status
+
+  - name: Check dest chain
+    stat:
+      path: '/etc/pve/nodes/{{ ns_name }}/pveproxy-ssl.pem'
+    register: dest_chain_status
+
+  - name: Set new cert chain
+    shell: cp -f "/etc/letsencrypt/certs/fullchain_{{ letsencrypt_domain_name }}.pem" '/etc/pve/nodes/{{ ns_name }}/pveproxy-ssl.pem'
+    when: src_chain_status.stat.exists and ( (not dest_chain_status.stat.exists) or src_chain_status.stat.checksum != dest_chain_status.stat.checksum)
+    register: new_chain
+
+  - name: Check src key
+    stat:
+      path: "/etc/letsencrypt/keys/{{ letsencrypt_domain_name }}.key"
+    register: src_key_status
+
+  - name: Check dest key
+    stat:
+      path: '/etc/pve/nodes/{{ ns_name }}/pveproxy-ssl.key'
+    register: dest_key_status
+
+  - name: Set new cert key
+    shell: cp -f "/etc/letsencrypt/keys/{{ letsencrypt_domain_name }}.key" '/etc/pve/nodes/{{ ns_name }}/pveproxy-ssl.key'
+    when: src_key_status.stat.exists and ( (not dest_key_status.stat.exists) or src_key_status.stat.checksum != dest_key_status.stat.checksum)
+    register: new_key
+
+  - name: Reset if changed
+    ansible.builtin.systemd_service:
+      state: restarted
+      daemon_reload: True
+      name: pveproxy
+    when: new_chain is changed or new_key is changed 

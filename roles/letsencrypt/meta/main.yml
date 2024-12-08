@@ -1,0 +1,19 @@
+galaxy_info:
+  author: Zachary LeBlanc
+  description: Generate Let's Encrypt certificates and verify via http-01 or dns-01 challenge.
+  company: Red Hat
+
+  issue_tracker_url: https://github.com/zjleblanc/zjleblanc.utils/issues
+
+  license: MIT
+
+  min_ansible_version: 2.1
+
+  galaxy_tags:
+    - acme
+    - letsencrypt
+    - ssl
+    - certificates
+    - cloudflare
+
+dependencies: []

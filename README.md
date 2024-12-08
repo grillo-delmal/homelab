@@ -112,6 +112,12 @@ apps:
 proxmox_password: 12345
 homelab_gateway_ip: <gateway>
 homelab_domain: <domain>
+
+letsencrypt_cloudflare_token: <token>
+letsencrypt_email: <mail>
+letsencrypt_challenge_type: dns_01
+letsencrypt_base_domain_name: <base_domain>
+letsencrypt_domain_name: "{{ ns_name }}.{{ homelab_domain }}"
 ```
 
 ### inventory/group_vars/homelab/servers.yml

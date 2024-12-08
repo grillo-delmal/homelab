@@ -1,0 +1,16 @@
+---
+# letsencrypt_email: acme@example.com
+# letsencrypt_domain_name: example.autodotes.com # Used for CN of certificate (base or subdomain)
+# letsencrypt_base_domain_name: autodotes.com # Base domain
+letsencrypt_directory: https://acme-v02.api.letsencrypt.org/directory
+letsencrypt_version: 2
+letsencrypt_dir: /etc/letsencrypt
+letsencrypt_keys_dir: "{{ letsencrypt_dir }}/keys"
+letsencrypt_csrs_dir: "{{ letsencrypt_dir }}/csrs"
+letsencrypt_certs_dir: "{{ letsencrypt_dir }}/certs"
+letsencrypt_account_key: "{{ letsencrypt_dir }}/account/account.key"
+letsencrypt_force_renew: false
+
+# letsencrypt_challenge_type: # Either http_01 or dns_01
+letsencrypt_http01_webroot: /var/www/html
+letsencrypt_dns01_provider: cloudflare # Only supported provider
