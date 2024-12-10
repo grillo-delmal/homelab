@@ -1,6 +1,6 @@
 ---
 - name: Upload container init script
-  copy:
+  ansible.builtin.copy:
     dest: /opt/setup.sh
     content: |
       #!/bin/bash

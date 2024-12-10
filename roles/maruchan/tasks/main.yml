@@ -9,6 +9,12 @@
     - cockpit-podman
     state: latest
 
+- name: Allow login
+  ansible.builtin.copy:
+    dest: /etc/cockpit/disallowed-users
+    content: ""
+  register: config_change
+
 - name: Start cockpit
   service:
     name: cockpit.socket
@@ -28,7 +34,7 @@
     mode: '0755'
 
 - name: Add config
-  copy:
+  ansible.builtin.copy:
     dest: /data/config.json
     content: "{{ 
       config | 
