@@ -96,17 +96,17 @@ homelab:
         <container_2>:
 
 # Which server and container are going to be used for each app
-apps:
+roles:
   children:
-    app_ai:
+    role_ai:
       hosts:
         <server_1>:
         <container_2>:
-    app_maruchan:
+    role_maruchan:
       hosts:
         <server_0>:
         <container_1>:
-    app_dns:
+    role_dns:
       hosts:
         <server_0>:
         <container_0>:
@@ -136,7 +136,7 @@ ansible_user: root
 
 ## App specific variables
 
-### inventory/group_vars/app_dns.yml
+### inventory/group_vars/roles/role_dns.yml
 ```yml
 dns_config:
   trusted:
@@ -146,13 +146,13 @@ dns_config:
 ```
 
 
-### inventory/group_vars/app_ai.yml
+### inventory/group_vars/roles/role_ai.yml
 ```yml
 # This is the model that will be pulled using ramalama
 ai_model: llama3.2:3b
 ```
 
-### inventory/group_vars/app_maruchan.yml
+### inventory/group_vars/roles/role_maruchan.yml
 ```yml
 # This variable gets written as a json file to be used as the bot config
 # Other service hostnames will get overwritten during provisioning

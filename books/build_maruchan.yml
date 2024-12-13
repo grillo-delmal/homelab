@@ -1,6 +1,6 @@
 ---
 
-- hosts: app_maruchan:&servers
+- hosts: role_maruchan:&servers
   roles:
   - role: proxmox_server
 
@@ -16,16 +16,16 @@
       force: "{{ proxmox_force | default(True) }}"
 
     containers: "{{ 
-      groups['app_maruchan'] |
+      groups['role_maruchan'] |
         intersect(groups['containers']) |
         map('extract', hostvars) }}"
 
-- hosts: app_maruchan:&containers
+- hosts: role_maruchan:&containers
   roles:
   - role: maruchan
     config: "{{ maruchan_config }}"
     ai_url: "http://{{ 
-      (groups['app_ai'] |
+      (groups['role_ai'] |
         intersect(groups['containers']) |
         map('extract', hostvars))[0].ns_name }}.{{ homelab_domain }}:8080"
     starbound_config:

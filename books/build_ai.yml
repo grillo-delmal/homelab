@@ -1,6 +1,6 @@
 ---
 
-- hosts: app_ai:&servers
+- hosts: role_ai:&servers
   roles:
   - role: proxmox_server
 
@@ -16,11 +16,11 @@
       force: "{{ proxmox_force | default(True) }}"
 
     containers: "{{ 
-      groups['app_ai'] |
+      groups['role_ai'] |
         intersect(groups['containers']) |
         map('extract', hostvars) }}"
 
-- hosts: app_ai:&containers
+- hosts: role_ai:&containers
   roles:
   - role: ramalama
     model: "{{ ai_model }}"

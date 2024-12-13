@@ -1,6 +1,6 @@
 ---
 
-- hosts: app_dns:&servers
+- hosts: role_dns:&servers
   roles:
   - role: proxmox_server
 
@@ -16,11 +16,11 @@
       force: "{{ proxmox_force | default(True) }}"
 
     containers: "{{ 
-      groups['app_dns'] |
+      groups['role_dns'] |
         intersect(groups['containers']) |
         map('extract', hostvars) }}"
 
-- hosts: app_dns:&containers
+- hosts: role_dns:&containers
   roles:
   - role: dns
     domain: "{{ homelab_domain }}"

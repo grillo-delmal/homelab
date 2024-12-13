@@ -32,6 +32,7 @@
     pubkey: "{{ host_general.pubkey | default(omit) }}"
     password: "{{ container.password | default(host_proxmox.password) }}"
     disk: '{{ container.disk | default(omit) }}'
+    mounts: '{{ container.mounts | default(omit) }}'
     cores: '{{ container.cores | default(omit) }}'
     memory: '{{ container.memory | default(omit) }}'
     swap: 0
