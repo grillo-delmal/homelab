@@ -1,33 +1,13 @@
 ---
 
-- hosts: role_dns:&servers
-  roles:
-  - role: proxmox_server
-
-    general:
-      pubkey: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_ed25519.pub') }}"
-      gateway: "{{ homelab_gateway_ip }}"
-      domain: "{{ homelab_domain }}"
-
-    proxmox:
-      user: "root@pam"
-      host: "{{ ansible_host }}"
-      password: "{{ proxmox_password }}"
-      force: "{{ proxmox_force | default(True) }}"
-
-    containers: "{{ 
-      groups['role_dns'] |
-        intersect(groups['containers']) |
-        map('extract', hostvars) }}"
-
-- hosts: role_dns:&containers
+- hosts: role_dns
   roles:
   - role: dns
     domain: "{{ homelab_domain }}"
     dns: "{{ dns_config }}"
     servers: |
       {{
-        groups['servers'] | 
+        groups['proxmox'] | 
           map('extract', hostvars) | 
           map('dict2items') | 
           map('selectattr', 'key', 'in', ['ansible_host', 'ns_name']) | 

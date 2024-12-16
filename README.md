@@ -2,7 +2,9 @@
 
 These playbooks are built to provision and maintain my homelab infrastructure :)
 
-This assumes that the servers have proxmox installed and that they can be managed using ansible
+This assumes that the servers have proxmox installed and that they can be managed using ansible.
+
+I'm also have an updated version of `community-general` collection for the updated proxmox tasks.
 
 # Playbooks
 
@@ -22,9 +24,17 @@ This playbook will try to upgrade all infra packages
 ansible-playbook books/upgrade_all.yml
 ```
 
-## Rebuild specific app from scratch
+## Provision certs and containers to proxmox host
 
-If called directly, the playbooks will rebuild the containers and install the app from scratch. Information might be lost so use with caution.
+This playbook will provision / update the container infrastructure using the information collected from the inventory.
+
+```sh
+ansible-playbook books/setup_servers.yml
+```
+
+## Rebuild / update specific app
+
+If called directly, the playbooks will install / updates the referenced app in the targets marked by the inventory.
 
 ```sh
 ansible-playbook books/build_{APPNAME}.yml
@@ -44,56 +54,38 @@ Here is an example template based on my planned local infra as of now, might be 
 all:
   hosts:
     <server_0>:
-      ansible_host: <ip_addr>
-      ns_name: root
-
     <server_1>:
-      ansible_host: <ip_addr>
-      ns_name: aux
-
     <container_0>:
-      vmid: <vmid>
-      ansible_host: <ip_addr>
-      ns_name: ns
-      disk: 'local-lvm:4'
-      cores: 1
-      memory: 512
-      unprivileged: False
-
     <container_1>:
-      vmid: <vmid>
-      ansible_host: <ip_addr>
-      ns_name: maruchan
-      disk: 'local-lvm:4'
-      cores: 1
-      memory: 1024
-      unprivileged: True
-      features:
-        - nesting=1
-
     <container_2>:
-      vmid: <vmid>
-      ansible_host: <ip_addr>
-      ns_name: ai
-      disk: 'local-lvm:8'
-      cores: 4
-      memory: 4096
-      unprivileged: True
-      features:
-        - nesting=1
 
-# categorize between servers and containers
-homelab:
+# homelab is the one with the main proxmox instalation
+hardware:
   children:
-    servers:
+    homelab:
       hosts:
         <server_0>:
+        <container_0>:
+        <container_1>:
+        <container_2>:
+    other:
+      hosts:
         <server_1>:
+
+# Categorize between servers and containers
+type:
+  children:
+    proxmox:
+      hosts:
+        <server_0>:
     containers:
       hosts:
         <container_0>:
         <container_1>:
         <container_2>:
+    servers:
+      hosts:
+        <server_1>:
 
 # Which server and container are going to be used for each app
 roles:
@@ -101,15 +93,68 @@ roles:
     role_ai:
       hosts:
         <server_1>:
-        <container_2>:
     role_maruchan:
       hosts:
-        <server_0>:
         <container_1>:
     role_dns:
       hosts:
-        <server_0>:
         <container_0>:
+```
+
+## Host variables
+
+### inventory/host_vars/<server_0>.yml
+
+```yml
+ansible_host: <ip_addr>
+ns_name: root
+```
+
+### inventory/host_vars/<server_1>.yml
+
+```yml
+ansible_host: <ip_addr>
+ns_name: aux
+```
+
+### inventory/host_vars/<container_0>.yml
+
+```yml
+vmid: <vmid>
+ansible_host: <ip_addr>
+ns_name: ns
+disk: 'local-lvm:4'
+cores: 1
+memory: 512
+unprivileged: False
+```
+
+### inventory/host_vars/<container_1>.yml
+
+```yml
+vmid: <vmid>
+ansible_host: <ip_addr>
+ns_name: maruchan
+disk: 'local-lvm:4'
+cores: 1
+memory: 1024
+unprivileged: True
+features:
+  - nesting=1
+```
+
+### inventory/host_vars/<container_2>.yml
+
+```yml
+vmid: <vmid>
+ansible_host: <ip_addr>
+ns_name: ai
+disk: 'local-lvm:8'
+cores: 4
+memory: 4096
+unprivileged: True
+features:
+  - nesting=1
 ```
 
 ## Server variables
@@ -144,7 +189,6 @@ dns_config:
   forwarders:
   - <ip of resolver when not asking about this domain>
 ```
-
 
 ### inventory/group_vars/roles/role_ai.yml
 ```yml

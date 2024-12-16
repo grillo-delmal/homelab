@@ -1,25 +1,16 @@
-- name: Stop existing {{ container.ns_name }}.{{ general.domain }}
-  community.general.proxmox:
-    vmid: '{{ container.vmid }}'
+- name: Retrieve info from {{ container.ns_name }}.{{ general.domain }}
+  community.general.proxmox_vm_info:
     node: root
+    vmid: '{{ container.vmid }}'
     api_host: '{{ host_proxmox.host }}'
     api_user: '{{ host_proxmox.user }}'
     api_password: "{{ host_proxmox.password }}"
-    state: stopped
-  ignore_errors: True
-  when: host_proxmox.force
+    config: current
+  register:
+    _proxmox_lxc_vm_info
 
-- name: Remove if {{ container.ns_name }}.{{ general.domain }} exists
-  community.general.proxmox:
-    vmid: '{{ container.vmid }}'
-    node: root
-    api_host: '{{ host_proxmox.host }}'
-    api_user: '{{ host_proxmox.user }}'
-    api_password: "{{ host_proxmox.password }}"
-    state: absent
-  when: host_proxmox.force
-
-- name: container {{ container.ns_name }}.{{ general.domain }} exists
+- name: Container {{ container.ns_name }}.{{ general.domain }} created
+  when: _proxmox_lxc_vm_info.proxmox_vms | length == 0
   community.general.proxmox:
     vmid: '{{ container.vmid }}'
     node: root
@@ -27,12 +18,14 @@
     api_user: '{{ host_proxmox.user }}'
     api_password: "{{ host_proxmox.password }}"
     hostname: "{{ container.ns_name }}.{{ general.domain }}"
-    storage: local-lvm
-    ostemplate: 'local:vztmpl/fedora-41-default_20241118_amd64.tar.xz'
+    ostemplate: "{{ container.ostemplate | default('local:vztmpl/fedora-41-default_20241118_amd64.tar.xz') }}"
     pubkey: "{{ host_general.pubkey | default(omit) }}"
     password: "{{ container.password | default(host_proxmox.password) }}"
     disk: '{{ container.disk | default(omit) }}'
     mounts: '{{ container.mounts | default(omit) }}'
+    mount_volumes: '{{ container.mount_volumes | default(omit) }}'
+    netif:
+      net0: "name=eth0,gw={{ general.gateway }},ip={{ container.ansible_host }}/24,bridge=vmbr0"
     cores: '{{ container.cores | default(omit) }}'
     memory: '{{ container.memory | default(omit) }}'
     swap: 0
@@ -40,10 +33,32 @@
     features: '{{ container.features | default(omit) }}'
     onboot: True
     state: present
+
+- name: Container {{ container.ns_name }}.{{ general.domain }} updated
+  when: _proxmox_lxc_vm_info.proxmox_vms | length > 0
+  community.general.proxmox:
+    vmid: '{{ container.vmid }}'
+    node: root
+    api_host: '{{ host_proxmox.host }}'
+    api_user: '{{ host_proxmox.user }}'
+    api_password: "{{ host_proxmox.password }}"
+    hostname: "{{ container.ns_name }}.{{ general.domain }}"
+    pubkey: "{{ host_general.pubkey | default(omit) }}"
+    password: "{{ container.password | default(host_proxmox.password) }}"
+    disk: '{{ container.disk | default(omit) }}'
+    # mounts: '{{ container.mounts | default(omit) }}'
+    # mount_volumes: '{{ container.mount_volumes | default(omit) }}'
     netif:
       net0: "name=eth0,gw={{ general.gateway }},ip={{ container.ansible_host }}/24,bridge=vmbr0"
+    cores: '{{ container.cores | default(omit) }}'
+    memory: '{{ container.memory | default(omit) }}'
+    swap: 0
+    unprivileged: '{{ container.unprivileged | default(omit) }}'
+    features: '{{ container.features | default(omit) }}'
+    onboot: True
+    update: true
 
-- name: container {{ container.ns_name }}.{{ general.domain }} is running
+- name: Container {{ container.ns_name }}.{{ general.domain }} is running
   community.general.proxmox:
     vmid: '{{ container.vmid }}'
     api_host: '{{ host_proxmox.host }}'

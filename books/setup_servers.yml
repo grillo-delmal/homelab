@@ -1,6 +1,24 @@
 ---
 
-- hosts: servers
+- hosts: homelab:&proxmox
+  roles:
+  - role: proxmox_server
+
+    general:
+      pubkey: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_ed25519.pub') }}"
+      gateway: "{{ homelab_gateway_ip }}"
+      domain: "{{ homelab_domain }}"
+
+    proxmox:
+      user: "root@pam"
+      host: "{{ ansible_host }}"
+      password: "{{ proxmox_password }}"
+
+    containers: "{{ 
+      groups['homelab'] |
+        intersect(groups['containers']) |
+        map('extract', hostvars) }}"
+
   tasks:
 
   - name: Manage SSL certs
@@ -42,4 +60,4 @@
       state: restarted
       daemon_reload: True
       name: pveproxy
-    when: new_chain is changed or new_key is changed 
+    when: new_chain is changed or new_key is changed
