@@ -1,6 +1,6 @@
 - name: Retrieve info from {{ container.ns_name }}.{{ general.domain }}
   community.general.proxmox_vm_info:
-    node: root
+    node: '{{ host_proxmox.node }}'
     vmid: '{{ container.vmid }}'
     api_host: '{{ host_proxmox.host }}'
     api_user: '{{ host_proxmox.user }}'
@@ -13,7 +13,7 @@
   when: _proxmox_lxc_vm_info.proxmox_vms | length == 0
   community.general.proxmox:
     vmid: '{{ container.vmid }}'
-    node: root
+    node: '{{ host_proxmox.node }}'
     api_host: '{{ host_proxmox.host }}'
     api_user: '{{ host_proxmox.user }}'
     api_password: "{{ host_proxmox.password }}"
@@ -38,7 +38,7 @@
   when: _proxmox_lxc_vm_info.proxmox_vms | length > 0
   community.general.proxmox:
     vmid: '{{ container.vmid }}'
-    node: root
+    node: '{{ host_proxmox.node }}'
     api_host: '{{ host_proxmox.host }}'
     api_user: '{{ host_proxmox.user }}'
     api_password: "{{ host_proxmox.password }}"
