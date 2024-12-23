@@ -17,6 +17,17 @@
   - role: proxmox_server
 
   tasks:
+    - name: Prepare storage paths
+      ansible.builtin.include_role:
+        name: storage
+        tasks_from: nfs_paths
+      vars:
+        mount_data: '{{ item }}'
+      loop: "{{ 
+        (groups['homelab'] |
+          intersect(groups['role_storage']) |
+          map('extract', hostvars))[0].storage_src }}"
+
     - name: Build containers
       ansible.builtin.include_role:
         name: proxmox_server

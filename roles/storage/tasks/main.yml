@@ -1,0 +1,67 @@
+---
+
+- name: Prepare services
+  dnf:
+    name:
+    - btrfs
+    - cockpit
+    - cockpit-ws
+    - cockpit-bridge
+    - cockpit-files
+    - cockpit-networkmanager
+    - cockpit-storaged.noarch
+    - nfs-utils
+    - libnfsidmap
+    - sssd-nfs-idmap
+    state: latest
+
+- name: Allow login
+  ansible.builtin.copy:
+    dest: /etc/cockpit/disallowed-users
+    content: ""
+  register: config_change
+
+- name: Start cockpit
+  service:
+    name: cockpit.socket
+    state: started
+    enabled: True
+
+# Make sure all btrfs sub-source exist
+
+# Create NFS for each sub-source
+# using https://middlewaretechnologies.in/2023/09/how-to-setup-nfs-server-using-vagrant-and-ansible.html as reference
+- name: add group
+  group:
+    name: admin
+    gid: 100000
+    state: present
+
+- name: add user
+  user:
+    name: admin
+    uid: 100000
+    comment: admin
+    group: admin
+
+- name: ensure shared directories are present
+  file: 
+    path: "{{ item.path }}"
+    state: directory
+    mode: '0744'
+    owner: admin
+    group: admin
+  loop: '{{ storage_src }}'
+
+- name: configure nfs server
+  template: 
+    src: exports.j2
+    dest: /etc/exports
+    mode: '0644'
+  notify:
+    - Backup NFS config
+
+- name: ensure nfs service is started
+  service:
+    name: nfs-server
+    state: started

@@ -1,0 +1,23 @@
+---
+
+- hosts: role_storage
+  roles:
+  - role: storage
+
+- hosts: homelab:&proxmox
+  vars:
+    storage_host: "{{ 
+      (groups['homelab'] |
+        intersect(groups['role_storage']) |
+        map('extract', hostvars))[0].storage_host }}"
+  tasks:
+    - name: Mount NFS {{ item.name }}
+      ansible.builtin.include_role:
+        name: storage
+        tasks_from: nfs_client
+      vars:
+        mount_data: '{{ item }}'
+      loop: "{{ 
+        (groups['homelab'] |
+          intersect(groups['role_storage']) |
+          map('extract', hostvars))[0].storage_src }}"

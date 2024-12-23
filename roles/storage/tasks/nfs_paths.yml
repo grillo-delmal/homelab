@@ -1,0 +1,11 @@
+- name: Task name
+  stat:
+    path: '{{ mount_data.target }}'
+  register: register_name
+
+- name: Path must exist
+  ansible.builtin.file:
+    path: '{{ mount_data.target }}'
+    state: directory
+    mode: '0755'
+  when: not register_name.stat.exists

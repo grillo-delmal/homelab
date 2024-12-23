@@ -58,6 +58,7 @@ all:
     <container_0>:
     <container_1>:
     <container_2>:
+    <container_3>:
 
 # homelab is the one with the main proxmox instalation
 hardware:
@@ -68,6 +69,7 @@ hardware:
         <container_0>:
         <container_1>:
         <container_2>:
+        <container_3>:
     other:
       hosts:
         <server_1>:
@@ -83,6 +85,7 @@ type:
         <container_0>:
         <container_1>:
         <container_2>:
+        <container_3>:
     servers:
       hosts:
         <server_1>:
@@ -90,15 +93,18 @@ type:
 # Which server and container are going to be used for each app
 roles:
   children:
+    role_dns:
+      hosts:
+        <container_0>:
+    role_storage:
+      hosts:
+        <container_0>:
     role_ai:
       hosts:
         <server_1>:
     role_maruchan:
       hosts:
         <container_1>:
-    role_dns:
-      hosts:
-        <container_0>:
 ```
 
 ## Host variables
@@ -120,34 +126,91 @@ ns_name: aux
 ### inventory/host_vars/<container_0>.yml
 
 ```yml
-vmid: <vmid>
 ansible_host: <ip_addr>
+
+# Container
+vmid: <vmid>
 ns_name: ns
 disk: 'local-lvm:4'
 cores: 1
 memory: 512
 unprivileged: False
+
+# NS Role
+dns_config:
+  trusted:
+  - <netmask of trusted range>
+  forwarders:
+  - <ip of resolver when not asking about this domain>
 ```
 
 ### inventory/host_vars/<container_1>.yml
 
 ```yml
-vmid: <vmid>
 ansible_host: <ip_addr>
-ns_name: maruchan
+
+# Container
+vmid: <vmid>
+ns_name: storage
 disk: 'local-lvm:4'
 cores: 1
 memory: 1024
+mounts:
+  dev0: /dev/sdb
+  mp0: /dev/sdb,mp=/mnt
+netif:
+  net0: "name=eth0,gw={{ gateway_ip }},ip={{ ansible_host }}/24,bridge=vmbr0"
+  net1: "name=eth1,ip=<storage_priv_bridge_ip>,bridge=<storage_priv_bridge_name>"
 unprivileged: True
 features:
   - nesting=1
+
+
+# Storage Role
+storage_host: <storage_priv_bridge_ip>
+storage_src:
+  - name: maruchan
+    path: /mnt/maruchan
+    target: /bindmounts/maruchan
+    listen: 10.40.0.0/24
+    mode: rw
 ```
 
 ### inventory/host_vars/<container_2>.yml
 
 ```yml
-vmid: <vmid>
 ansible_host: <ip_addr>
+
+# Container
+vmid: <vmid>
+ns_name: maruchan
+disk: 'local-lvm:4'
+mounts:
+  mp0: /bindmounts/maruchan,mp=/storage
+cores: 1
+memory: 1024
+unprivileged: True
+features:
+  - nesting=1
+
+# This variable gets written as a json file to be used as the bot config
+# Other service hostnames will get overwritten during provisioning
+# To see more parameters, check the bot's repo.
+maruchan_config:
+  bot: 
+    token: <discord token>
+    admin: <privileged user id>
+  starbound:
+    rcon_password: <rcon_password>
+```
+
+### inventory/host_vars/<container_3>.yml
+
+```yml
+ansible_host: <ip_addr>
+
+# Container
+vmid: <vmid>
 ns_name: ai
 disk: 'local-lvm:8'
 cores: 4
@@ -155,6 +218,9 @@ memory: 4096
 unprivileged: True
 features:
   - nesting=1
+
+# This is the model that will be pulled using ramalama
+ai_model: llama3.2:3b
 ```
 
 ## Server variables
@@ -178,35 +244,4 @@ letsencrypt_domain_name: "{{ ns_name }}.{{ domain_name }}"
 # Required because proxmox permission system is not good enough
 ansible_user: root
 ```
-
-## App specific variables
-
-### inventory/group_vars/roles/role_dns.yml
-```yml
-dns_config:
-  trusted:
-  - <netmask of trusted range>
-  forwarders:
-  - <ip of resolver when not asking about this domain>
-```
-
-### inventory/group_vars/roles/role_ai.yml
-```yml
-# This is the model that will be pulled using ramalama
-ai_model: llama3.2:3b
-```
-
-### inventory/group_vars/roles/role_maruchan.yml
-```yml
-# This variable gets written as a json file to be used as the bot config
-# Other service hostnames will get overwritten during provisioning
-# To see more parameters, check the bot's repo.
-maruchan_config:
-  bot: 
-    token: <discord token>
-    admin: <privileged user id>
-  starbound:
-    rcon_password: <rcon_password>
-```
-
 
