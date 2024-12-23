@@ -163,14 +163,14 @@ features:
 ```yml
 # make sure to encrypt your password using vault
 proxmox_password: 12345
-homelab_gateway_ip: <gateway>
-homelab_domain: <domain>
+gateway_ip: <gateway>
+domain_name: <domain>
 
 letsencrypt_cloudflare_token: <token>
 letsencrypt_email: <mail>
 letsencrypt_challenge_type: dns_01
 letsencrypt_base_domain_name: <base_domain>
-letsencrypt_domain_name: "{{ ns_name }}.{{ homelab_domain }}"
+letsencrypt_domain_name: "{{ ns_name }}.{{ domain_name }}"
 ```
 
 ### inventory/group_vars/homelab/servers.yml

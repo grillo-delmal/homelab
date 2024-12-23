@@ -3,7 +3,7 @@
 - hosts: role_dns
   roles:
   - role: dns
-    domain: "{{ homelab_domain }}"
+    domain: "{{ domain_name }}"
     dns: "{{ dns_config }}"
     servers: |
       {{

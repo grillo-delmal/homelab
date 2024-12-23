@@ -11,6 +11,9 @@
 
 - name: Container {{ container.ns_name }}.{{ general.domain }} created
   when: _proxmox_lxc_vm_info.proxmox_vms | length == 0
+  vars:
+    default_net:
+      net0: "name=eth0,gw={{ general.gateway }},ip={{ container.ansible_host }}/24,bridge=vmbr0"
   community.general.proxmox:
     vmid: '{{ container.vmid }}'
     node: '{{ host_proxmox.node }}'
@@ -24,8 +27,7 @@
     disk: '{{ container.disk | default(omit) }}'
     mounts: '{{ container.mounts | default(omit) }}'
     mount_volumes: '{{ container.mount_volumes | default(omit) }}'
-    netif:
-      net0: "name=eth0,gw={{ general.gateway }},ip={{ container.ansible_host }}/24,bridge=vmbr0"
+    netif: '{{ container.netif | default(default_net) }}'
     cores: '{{ container.cores | default(omit) }}'
     memory: '{{ container.memory | default(omit) }}'
     swap: 0
@@ -36,6 +38,9 @@
 
 - name: Container {{ container.ns_name }}.{{ general.domain }} updated
   when: _proxmox_lxc_vm_info.proxmox_vms | length > 0
+  vars:
+    default_net:
+      net0: "name=eth0,gw={{ general.gateway }},ip={{ container.ansible_host }}/24,bridge=vmbr0"
   community.general.proxmox:
     vmid: '{{ container.vmid }}'
     node: '{{ host_proxmox.node }}'
@@ -48,8 +53,7 @@
     disk: '{{ container.disk | default(omit) }}'
     # mounts: '{{ container.mounts | default(omit) }}'
     # mount_volumes: '{{ container.mount_volumes | default(omit) }}'
-    netif:
-      net0: "name=eth0,gw={{ general.gateway }},ip={{ container.ansible_host }}/24,bridge=vmbr0"
+    netif: '{{ container.netif | default(default_net) }}'
     cores: '{{ container.cores | default(omit) }}'
     memory: '{{ container.memory | default(omit) }}'
     swap: 0
