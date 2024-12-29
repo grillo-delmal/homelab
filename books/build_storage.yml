@@ -2,6 +2,7 @@
 
 - hosts: role_storage
   roles:
+  - role: cockpit
   - role: storage
 
 - hosts: homelab:&proxmox

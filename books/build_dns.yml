@@ -2,6 +2,7 @@
 
 - hosts: role_dns
   roles:
+  - role: cockpit
   - role: dns
     domain: "{{ domain_name }}"
     dns: "{{ dns_config }}"

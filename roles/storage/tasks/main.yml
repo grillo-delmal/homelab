@@ -4,9 +4,6 @@
   dnf:
     name:
     - btrfs
-    - cockpit
-    - cockpit-ws
-    - cockpit-bridge
     - cockpit-files
     - cockpit-networkmanager
     - cockpit-storaged.noarch
@@ -14,18 +11,6 @@
     - libnfsidmap
     - sssd-nfs-idmap
     state: latest
-
-- name: Allow login
-  ansible.builtin.copy:
-    dest: /etc/cockpit/disallowed-users
-    content: ""
-  register: config_change
-
-- name: Start cockpit
-  service:
-    name: cockpit.socket
-    state: started
-    enabled: True
 
 # Make sure all btrfs sub-source exist
 
