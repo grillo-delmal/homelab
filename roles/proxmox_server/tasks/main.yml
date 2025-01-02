@@ -36,11 +36,11 @@
 
 - name: Check dest chain
   stat:
-    path: '/etc/pve/nodes/{{ ns_name }}/pveproxy-ssl.pem'
+    path: '/etc/pve/nodes/{{ hostname }}/pveproxy-ssl.pem'
   register: dest_chain_status
 
 - name: Set new cert chain
-  shell: cp -f "/etc/letsencrypt/certs/fullchain_{{ letsencrypt_domain_name }}.pem" '/etc/pve/nodes/{{ ns_name }}/pveproxy-ssl.pem'
+  shell: cp -f "/etc/letsencrypt/certs/fullchain_{{ letsencrypt_domain_name }}.pem" '/etc/pve/nodes/{{ hostname }}/pveproxy-ssl.pem'
   when: src_chain_status.stat.exists and ( (not dest_chain_status.stat.exists) or src_chain_status.stat.checksum != dest_chain_status.stat.checksum)
   register: new_chain
 
@@ -51,11 +51,11 @@
 
 - name: Check dest key
   stat:
-    path: '/etc/pve/nodes/{{ ns_name }}/pveproxy-ssl.key'
+    path: '/etc/pve/nodes/{{ hostname }}/pveproxy-ssl.key'
   register: dest_key_status
 
 - name: Set new cert key
-  shell: cp -f "/etc/letsencrypt/keys/{{ letsencrypt_domain_name }}.key" '/etc/pve/nodes/{{ ns_name }}/pveproxy-ssl.key'
+  shell: cp -f "/etc/letsencrypt/keys/{{ letsencrypt_domain_name }}.key" '/etc/pve/nodes/{{ hostname }}/pveproxy-ssl.key'
   when: src_key_status.stat.exists and ( (not dest_key_status.stat.exists) or src_key_status.stat.checksum != dest_key_status.stat.checksum)
   register: new_key
 

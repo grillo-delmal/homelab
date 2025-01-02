@@ -11,7 +11,7 @@
         groups['proxmox'] | 
           map('extract', hostvars) | 
           map('dict2items') | 
-          map('selectattr', 'key', 'in', ['ansible_host', 'ns_name']) | 
+          map('selectattr', 'key', 'in', ['ansible_host', 'hostname']) | 
           map('items2dict')
       }}
     containers: |
@@ -19,7 +19,7 @@
         groups['containers'] |
           map('extract', hostvars) |
           map('dict2items') |
-          map('selectattr', 'key', 'in', ['ansible_host', 'ns_name']) |
+          map('selectattr', 'key', 'in', ['dns_list']) |
           map('items2dict')
       }}
 

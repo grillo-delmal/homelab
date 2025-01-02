@@ -1,4 +1,4 @@
-- name: Retrieve info from {{ container.ns_name }}.{{ general.domain }}
+- name: Retrieve info from {{ container.hostname }} on {{ host_proxmox.node }}
   community.general.proxmox_vm_info:
     node: '{{ host_proxmox.node }}'
     vmid: '{{ container.vmid }}'
@@ -9,25 +9,42 @@
   register:
     _proxmox_lxc_vm_info
 
-- name: Container {{ container.ns_name }}.{{ general.domain }} created
+- name: Container {{ container.hostname }} created on {{ host_proxmox.node }}
   when: _proxmox_lxc_vm_info.proxmox_vms | length == 0
   vars:
     default_net:
-      net0: "name=eth0,gw={{ general.gateway }},ip={{ container.ansible_host }}/24,bridge=vmbr0"
+      - "name=eth0,gw={{ general.gateway }},ip={{ container.ansible_host }}/24,bridge=vmbr0"
   community.general.proxmox:
     vmid: '{{ container.vmid }}'
     node: '{{ host_proxmox.node }}'
     api_host: '{{ host_proxmox.host }}'
     api_user: '{{ host_proxmox.user }}'
     api_password: "{{ host_proxmox.password }}"
-    hostname: "{{ container.ns_name }}.{{ general.domain }}"
+    hostname: "{{ container.hostname }}"
     ostemplate: "{{ container.ostemplate | default('local:vztmpl/fedora-41-default_20241118_amd64.tar.xz') }}"
     pubkey: "{{ host_general.pubkey | default(omit) }}"
     password: "{{ container.password | default(host_proxmox.password) }}"
     disk: '{{ container.disk | default(omit) }}'
-    mounts: '{{ container.mounts | default(omit) }}'
-    mount_volumes: '{{ container.mount_volumes | default(omit) }}'
-    netif: '{{ container.netif | default(default_net) }}'
+    netif: "{{
+        dict((
+          range((container.netif | default([]) | length) + 1) | 
+          product(['net']) | 
+          map('reverse') | 
+          map('join') |
+          zip((
+            default_net |
+            union((
+              range(1, (container.netif | default([]) | length) + 1) | 
+              product(['name=eth']) | 
+              map('reverse') | 
+              map('join') | 
+              zip(container.netif | default([])) | 
+              map('join', ',')
+            )) |
+            sort
+          ))
+        ))
+      }}"
     cores: '{{ container.cores | default(omit) }}'
     memory: '{{ container.memory | default(omit) }}'
     swap: 0
@@ -36,24 +53,43 @@
     onboot: True
     state: present
 
-- name: Container {{ container.ns_name }}.{{ general.domain }} updated
+- name: Container {{ container.hostname }} on {{ host_proxmox.node }} updated
   when: _proxmox_lxc_vm_info.proxmox_vms | length > 0
   vars:
     default_net:
-      net0: "name=eth0,gw={{ general.gateway }},ip={{ container.ansible_host }}/24,bridge=vmbr0"
+      - "name=eth0,gw={{ general.gateway }},ip={{ container.ansible_host }}/24,bridge=vmbr0"
   community.general.proxmox:
     vmid: '{{ container.vmid }}'
     node: '{{ host_proxmox.node }}'
     api_host: '{{ host_proxmox.host }}'
     api_user: '{{ host_proxmox.user }}'
     api_password: "{{ host_proxmox.password }}"
-    hostname: "{{ container.ns_name }}.{{ general.domain }}"
+    hostname: "{{ container.hostname }}"
     pubkey: "{{ host_general.pubkey | default(omit) }}"
     password: "{{ container.password | default(host_proxmox.password) }}"
     disk: '{{ container.disk | default(omit) }}'
     # mounts: '{{ container.mounts | default(omit) }}'
     # mount_volumes: '{{ container.mount_volumes | default(omit) }}'
-    netif: '{{ container.netif | default(default_net) }}'
+    netif: "{{
+              dict((
+                range((container.netif | default([]) | length) + 1) | 
+                product(['net']) | 
+                map('reverse') | 
+                map('join') |
+                zip((
+                  default_net |
+                  union((
+                    range(1, (container.netif | default([]) | length) + 1) | 
+                    product(['name=eth']) | 
+                    map('reverse') | 
+                    map('join') | 
+                    zip(container.netif | default([])) | 
+                    map('join', ',')
+                  )) |
+                  sort
+                ))
+              ))
+            }}"
     cores: '{{ container.cores | default(omit) }}'
     memory: '{{ container.memory | default(omit) }}'
     swap: 0
@@ -62,7 +98,7 @@
     onboot: True
     update: true
 
-- name: Container {{ container.ns_name }}.{{ general.domain }} is running
+- name: Container {{ container.hostname }} is running on {{ host_proxmox.node }}
   community.general.proxmox:
     vmid: '{{ container.vmid }}'
     api_host: '{{ host_proxmox.host }}'
@@ -70,13 +106,13 @@
     api_password: "{{ host_proxmox.password }}"
     state: started
 
-- name: Check if ansible is installed on {{ container.ns_name }}.{{ general.domain }}
+- name: Check if ansible is installed in {{ container.hostname }} on {{ host_proxmox.node }}
   ansible.builtin.shell: pct exec {{ container.vmid }} -- dnf list --installed -q openssh-server
   register: result
   ignore_errors: True
   changed_when: False
 
-- name: Install ansible on {{ container.ns_name }}.{{ general.domain }}
+- name: Install ansible in {{ container.hostname }} on {{ host_proxmox.node }}
   ansible.builtin.shell: |
     pct push {{ container.vmid }} /opt/setup.sh /opt/setup.sh
     pct exec {{ container.vmid }} -- chmod +x /opt/setup.sh

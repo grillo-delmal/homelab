@@ -8,7 +8,7 @@
     ai_url: "http://{{ 
       (groups['role_ai'] |
         intersect(groups['containers']) |
-        map('extract', hostvars))[0].ns_name }}.{{ domain_name }}:8080"
+        map('extract', hostvars))[0].ansible_host }}:8080"
     starbound_config:
       hostname: starbound
       port: 21026

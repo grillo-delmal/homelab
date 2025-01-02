@@ -9,7 +9,7 @@
 
     proxmox:
       user: "root@pam"
-      node: "{{ ns_name }}"
+      node: "{{ hostname }}"
       host: "{{ ansible_host }}"
       password: "{{ proxmox_password }}"
 
