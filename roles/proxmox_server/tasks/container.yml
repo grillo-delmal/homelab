@@ -25,6 +25,39 @@
     pubkey: "{{ host_general.pubkey | default(omit) }}"
     password: "{{ container.password | default(host_proxmox.password) }}"
     disk: '{{ container.disk | default(omit) }}'
+    mounts: "{{
+        container.mounts | 
+        default(
+          dict((
+            range((container.storage_mnt | default([]) | length)) | 
+            product(['mp']) | 
+            map('reverse') | 
+            map('join') |
+            default(omit) |
+            zip((
+              (
+                container |
+                default({'storage_mnt':[]}) |
+                community.general.json_query('storage_mnt[*].path') |
+                default([], true) |
+                zip(
+                  container |
+                  default({'storage_mnt':[]}) |
+                  community.general.json_query('storage_mnt[*].target') |
+                  default([], true)
+                ) |
+                map('join', ',mp=')
+              ) |
+              product([storage_target_path]) |
+              map('reverse') |
+              map('join')
+            )) |
+            default(omit) |
+            sort
+          )) |
+          default(omit, true)
+        )
+      }}"
     netif: "{{
         dict((
           range((container.netif | default([]) | length) + 1) | 

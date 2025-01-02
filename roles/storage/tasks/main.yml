@@ -12,30 +12,28 @@
     - sssd-nfs-idmap
     state: latest
 
-# Make sure all btrfs sub-source exist
-
-# Create NFS for each sub-source
-# using https://middlewaretechnologies.in/2023/09/how-to-setup-nfs-server-using-vagrant-and-ansible.html as reference
-- name: add group
+- name: Add group
   group:
     name: admin
     gid: 100000
     state: present
 
-- name: add user
+- name: Add user
   user:
     name: admin
     uid: 100000
     comment: admin
     group: admin
 
-- name: ensure shared directories are present
-  file: 
-    path: "{{ item.path }}"
-    state: directory
-    mode: '0744'
-    owner: admin
-    group: admin
+- name: Make sure they are subvolumes
+  community.general.btrfs_subvolume:
+    name: '{{ item.path }}'
+  loop: '{{ storage_src }}'
+
+- name: Make sure they have the correct size limits
+  ansible.builtin.include_tasks:  btrfs_size.yml
+  vars:
+    storage_data: '{{ item }}'
   loop: '{{ storage_src }}'
 
 - name: configure nfs server
@@ -43,8 +41,6 @@
     src: exports.j2
     dest: /etc/exports
     mode: '0644'
-  notify:
-    - Backup NFS config
 
 - name: ensure nfs service is started
   service:

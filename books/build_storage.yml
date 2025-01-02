@@ -1,6 +1,17 @@
 ---
 
 - hosts: role_storage
+  vars:
+    storage_src: |
+      {{
+        groups['all'] |
+          map('extract', hostvars) |
+          map('dict2items') |
+          map('selectattr', 'key', 'in', ['storage_mnt']) |
+          map('items2dict') |
+          community.general.json_query('[*].storage_mnt') |
+          flatten
+      }}
   roles:
   - role: cockpit
   - role: storage
@@ -11,14 +22,27 @@
       (groups['homelab'] |
         intersect(groups['role_storage']) |
         map('extract', hostvars))[0].storage_host }}"
+    storage_btrfs_path: "{{ 
+      (groups['homelab'] |
+        intersect(groups['role_storage']) |
+        map('extract', hostvars))[0].storage_btrfs_path }}"
+    storage_target_path: "{{ 
+      (groups['homelab'] |
+        intersect(groups['role_storage']) |
+        map('extract', hostvars))[0].storage_target_path }}"
   tasks:
-    - name: Mount NFS {{ item.name }}
+    - name: Mount NFS
       ansible.builtin.include_role:
         name: storage
         tasks_from: nfs_client
       vars:
         mount_data: '{{ item }}'
-      loop: "{{ 
-        (groups['homelab'] |
-          intersect(groups['role_storage']) |
-          map('extract', hostvars))[0].storage_src }}"
+      loop: "{{
+          groups['all'] |
+            map('extract', hostvars) |
+            map('dict2items') |
+            map('selectattr', 'key', 'in', ['storage_mnt']) |
+            map('items2dict') |
+            community.general.json_query('[*].storage_mnt') |
+            flatten
+        }}"
