@@ -49,16 +49,17 @@ Here is an example template based on my planned local infra as of now, might be 
 ## Inventory
 
 ### inventory/main.yml
+
 ```yml
 # Set ips and provisioning information for containers
 all:
   hosts:
     <server_0>:
-    <server_1>:
     <container_0>:
     <container_1>:
     <container_2>:
     <container_3>:
+    <container_4>:
 
 # homelab is the one with the main proxmox instalation
 hardware:
@@ -70,9 +71,7 @@ hardware:
         <container_1>:
         <container_2>:
         <container_3>:
-    other:
-      hosts:
-        <server_1>:
+        <container_4>:
 
 # Categorize between servers and containers
 type:
@@ -86,9 +85,7 @@ type:
         <container_1>:
         <container_2>:
         <container_3>:
-    servers:
-      hosts:
-        <server_1>:
+        <container_4>:
 
 # Which server and container are going to be used for each app
 roles:
@@ -98,13 +95,16 @@ roles:
         <container_0>:
     role_storage:
       hosts:
-        <container_0>:
+        <container_1>:
     role_ai:
       hosts:
-        <server_1>:
+        <container_2>:
     role_maruchan:
       hosts:
-        <container_1>:
+        <container_3>:
+    role_traefik:
+      hosts:
+        <container_4>:
 ```
 
 ## Host variables
@@ -114,13 +114,6 @@ roles:
 ```yml
 ansible_host: <ip_addr>
 ns_name: root
-```
-
-### inventory/host_vars/<server_1>.yml
-
-```yml
-ansible_host: <ip_addr>
-ns_name: aux
 ```
 
 ### inventory/host_vars/<container_0>.yml
@@ -153,27 +146,22 @@ ansible_host: <ip_addr>
 vmid: <vmid>
 ns_name: storage
 disk: 'local-lvm:4'
-cores: 1
-memory: 1024
 mounts:
   dev0: /dev/sdb
   mp0: /dev/sdb,mp=/mnt
 netif:
-  net0: "name=eth0,gw={{ gateway_ip }},ip={{ ansible_host }}/24,bridge=vmbr0"
-  net1: "name=eth1,ip=<storage_priv_bridge_ip>,bridge=<storage_priv_bridge_name>"
+  - "ip=<storage_priv_bridge_ip>,bridge=<storage_priv_bridge_name>"
+cores: 1
+memory: 1024
 unprivileged: True
 features:
   - nesting=1
 
-
 # Storage Role
 storage_host: <storage_priv_bridge_ip>
-storage_src:
-  - name: maruchan
-    path: /mnt/maruchan
-    target: /bindmounts/maruchan
-    listen: 10.40.0.0/24
-    mode: rw
+storage_nfs_listen: <storage_priv_subnet>
+storage_btrfs_path: /mnt
+storage_target_path: /bindmounts
 ```
 
 ### inventory/host_vars/<container_2>.yml
@@ -185,13 +173,17 @@ ansible_host: <ip_addr>
 vmid: <vmid>
 ns_name: maruchan
 disk: 'local-lvm:4'
-mounts:
-  mp0: /bindmounts/maruchan,mp=/storage
 cores: 1
 memory: 1024
 unprivileged: True
 features:
   - nesting=1
+
+# External storage
+storage_mnt:
+  - path: /maruchan
+    target: /storage
+    size: 50M
 
 # This variable gets written as a json file to be used as the bot config
 # Other service hostnames will get overwritten during provisioning
@@ -213,33 +205,83 @@ ansible_host: <ip_addr>
 vmid: <vmid>
 ns_name: ai
 disk: 'local-lvm:8'
+netif:
+  - "ip=<private_ip>,bridge=<traefik_private_network>"
 cores: 4
 memory: 4096
 unprivileged: True
 features:
   - nesting=1
 
-# This is the model that will be pulled using ramalama
+# AI Role
 ai_model: llama3.2:3b
+
+# Traefik Config
+traefik_config:
+  http:
+    routers:
+      to-ai:
+        rule: Host(`ai.{{ domain_name }}`)
+        service: ai
+        middlewares:
+        - whitelist
+    services:
+      ai:
+        loadBalancer:
+          servers:
+          - url: http://<private_ip>:8080
+    middlewares:
+      whitelist:
+        IPAllowList:
+          sourceRange:
+          - <local_network_mask>
+```
+
+
+### inventory/host_vars/<container_4>.yml
+
+```yml
+ansible_host: <ip_addr>
+
+# Container
+vmid: <vmid>
+ns_name: traefik
+disk: 'local-lvm:8'
+cores: 2
+memory: 1024
+unprivileged: True
+features:
+  - nesting=1
+netif:
+  - "ip=<private_ip>,bridge=<traefik_private_network>"
+
+# DNS settings
+dns_list:
+  - "*           IN      A       <ip_addr>"
+
+traefik_dashboard_whitelist:
+  - <Filtered IPs>
 ```
 
 ## Server variables
 
 ### inventory/group_vars/homelab/main.yml
+
 ```yml
 # make sure to encrypt your password using vault
 proxmox_password: 12345
 gateway_ip: <gateway>
-domain_name: <domain>
 
-letsencrypt_cloudflare_token: <token>
+domain_name: <domain>
+base_domain_name: <base_domain>
+cloudflare_token: <token>
+
 letsencrypt_email: <mail>
 letsencrypt_challenge_type: dns_01
-letsencrypt_base_domain_name: <base_domain>
-letsencrypt_domain_name: "{{ ns_name }}.{{ domain_name }}"
 ```
 
 ### inventory/group_vars/homelab/servers.yml
+
 ```yml
 # Required because proxmox permission system is not good enough
 ansible_user: root
