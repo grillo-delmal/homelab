@@ -1,0 +1,12 @@
+http:
+  routers:
+    dashboard:
+      rule: Host(`traefik.{{ domain_name }}`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))
+      service: api@internal
+      middlewares:
+      - dashboard_whitelist
+  middlewares:
+    dashboard_whitelist:
+      IPAllowList:
+        sourceRange:
+          {{ traefik_dashboard_whitelist | to_nice_yaml | indent(10) }}

@@ -1,0 +1,49 @@
+api:
+  dashboard: true
+
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+log:
+  level: INFO
+
+entryPoints:
+  web:
+    address: :80
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+  websecure:
+    address: :443
+    http:
+      tls:
+        certResolver: le
+        domains:
+          - main: "{{ domain_name }}"
+            sans:
+              - "*.{{ domain_name }}"
+
+serversTransport:
+  insecureSkipVerify: true
+
+certificatesResolvers:
+  le:
+    acme:
+      email: "{{ letsencrypt_email }}"
+      storage: acme.json
+      dnsChallenge:
+        provider: "cloudflare"
+        delayBeforeCheck: 5
+        resolvers:
+          - 1.1.1.1:53
+          - 8.8.8.8:53
+
+providers:
+  file:
+    directory: /opt/config
+    watch: true
+
+

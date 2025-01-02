@@ -1,0 +1,14 @@
+---
+
+- hosts: role_traefik
+  roles:
+  - role: cockpit
+  - role: traefik
+    targets: |
+      {{
+        groups['all'] |
+          map('extract', hostvars) |
+          map('dict2items') |
+          map('selectattr', 'key', 'in', ['hostname', 'traefik_config']) |
+          map('items2dict')
+      }}

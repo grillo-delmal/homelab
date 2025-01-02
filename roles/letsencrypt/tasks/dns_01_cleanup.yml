@@ -4,8 +4,8 @@
     - letsencrypt_dns01_provider == 'cloudflare'
     - letsencrypt_domain_name in r_acme_challenge.challenge_data
   community.general.cloudflare_dns:
-    domain: "{{ letsencrypt_base_domain_name }}"
-    api_token: "{{ letsencrypt_cloudflare_token }}"
+    domain: "{{ base_domain_name }}"
+    api_token: "{{ cloudflare_token }}"
     record: "{{ r_acme_challenge.challenge_data[letsencrypt_domain_name]['dns-01'].record }}"
     type: TXT
     state: absent
