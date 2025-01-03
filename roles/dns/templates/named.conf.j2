@@ -33,7 +33,7 @@ view internal {
 };
 
 view external {
-    match-clients { any; };
+    match-clients { ! trusted; };
 
     zone "{{ domain }}" IN {
         type primary;

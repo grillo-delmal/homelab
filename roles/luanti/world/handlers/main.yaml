@@ -1,0 +1,6 @@
+---
+
+- name: Restart minetest service
+  service:
+    name: minetest@{{ world.id }}.service
+    state: restarted

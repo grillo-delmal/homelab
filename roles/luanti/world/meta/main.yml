@@ -1,0 +1,5 @@
+---
+dependencies:
+  - role: luanti/base
+  - role: luanti/mapserver
+    when: mapserver is defined

@@ -1,0 +1,84 @@
+{
+	"configversion": 1,
+	"port": {{ mapserver.port }},
+	"enableprometheus": false,
+	"enablerendering": true,
+	"enablesearch": true,
+	"enableinitialrendering": true,
+	"enabletransparency": false,
+	"enablemediarepository": false,
+	"webdev": false,
+	"webapi": {
+		"enablemapblock": true,
+		"secretkey": "{{ mapserver_secretkey }}"
+	},
+	"layers": [
+		{
+			"id": 0,
+			"name": "Base",
+			"to": 160,
+			"from": -16
+		},
+		{
+			"id": 1,
+			"name": "Space",
+			"to": 1600,
+			"from": 1000
+		}
+	],
+	"renderingfetchlimit": 1000,
+	"renderingjobs": 8,
+	"renderingqueue": 100,
+	"incrementalrenderingtimer": "5s",
+	"mapobjects": {
+		"areas": true,
+		"bones": true,
+		"protector": true,
+		"xpprotector": true,
+		"privprotector": true,
+		"technic_quarry": true,
+		"technic_switch": true,
+		"technic_anchor": true,
+		"technic_reactor": true,
+		"luacontroller": true,
+		"digiterms": true,
+		"digilines": true,
+		"travelnet": true,
+		"mapserver_player": true,
+		"mapserver_poi": true,
+		"mapserver_label": true,
+		"mapserver_trainline": true,
+		"mapserver_border": true,
+		"tileserverlegacy": true,
+		"mission": true,
+		"jumpdrive": true,
+		"smartshop": true,
+		"fancyvend": true,
+		"atm": true,
+		"train": true,
+		"trainsignal": true,
+		"minecart": false,
+		"locator": false,
+		"signs": true,
+		"mapserver_airutils": true,
+		"phonograph": true,
+		"um_area_forsale": true
+	},
+	"mapblockaccessor": {
+		"expiretime": "15s",
+		"purgetime": "30s",
+		"maxitems": 500
+	},
+	"defaultoverlays": [
+		"mapserver_poi",
+		"mapserver_label",
+		"mapserver_player"
+	],
+	"skins": {
+		"enableskinsdb": false,
+		"skinspath": ""
+	},
+	"worldpath": "./",
+	"datapath": "./",
+	"colorstxtpath": "./"
+}

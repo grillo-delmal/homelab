@@ -1,0 +1,54 @@
+## Server
+
+#    Name of the player.
+#    When running a server, clients connecting with this name are admins.
+#    When starting from the main menu, this is overridden.
+#    type: string
+name = {{ world.admin_name }}
+
+### Serverlist and MOTD
+
+#    Name of the server, to be displayed when players join and in the serverlist.
+#    type: string
+server_name = {{ world.name }}
+
+#    Description of server, to be displayed when players join and in the serverlist.
+#    type: string
+server_description = {{ world.description }}
+
+#    Domain name of server, to be displayed in the serverlist.
+#    type: string
+server_address = {{ world.host }}
+
+#    Homepage of server, to be displayed in the serverlist.
+#    type: string
+server_url = {{ world.url }}
+
+#    Automatically report to the serverlist.
+#    type: bool
+server_announce = {{ world.announce }}
+
+## Server Security
+
+#    New users need to input this password.
+#    type: string
+{% if 'user_password' not in game or game.user_password == None  or game.user_password == '' %}
+# default_password = 
+{% else %}
+default_password = {{ game.user_password }}
+{% endif %}
+
+#    If enabled, players cannot join without a password or change theirs to an empty password.
+#    type: bool
+{% if 'user_password' not in game or game.user_password == None  or game.user_password == '' %}
+disallow_empty_password = false
+{% else %}
+disallow_empty_password = true
+{% endif %}
+
+# If mapserver mod is installed, use generated key
+mapserver.key = {{ mapserver_secretkey }}
+
+{% for item in world.settings %}
+{{ item }}
+{% endfor %}

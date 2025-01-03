@@ -1,0 +1,12 @@
+[Unit]
+Description=Minetest mapserver for the %i instance
+After=syslog.target network.target
+
+[Service]
+User=minetest
+Type=simple
+WorkingDirectory=/var/lib/minetest/%i/
+ExecStart=/opt/mapserver/mapserver
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,6 @@
+---
+
+- name: Restart mapserver service
+  service:
+    name: mapserver@{{ world.id }}.service
+    state: restarted
