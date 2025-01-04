@@ -11,6 +11,8 @@
     src: traefik.yml.j2
     dest: "/opt/traefik.yml"
     mode: 0600
+  notify:
+    - 'traefik : Restart traefik container'
 
 - name: Ensure directories are present
   file: 
