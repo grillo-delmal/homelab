@@ -5,6 +5,11 @@
     mine_sysconfig: "/etc/sysconfig/minetest/{{ world.id }}.conf"
     mine_config: "/etc/minetest/{{ world.id }}.conf"
 
+- name: Check if game path exists
+  stat:
+    path: "{{ mine_home }}/.minetest/games/{{ game.name }}/game.conf"
+  register: game_path
+
 - name: Game is available
   unarchive:
     src: "{{ game.url }}"
@@ -12,9 +17,9 @@
     owner: minetest
     group: minetest
     remote_src: yes
-  when: not ansible_check_mode
+  when: not game_path.stat.exists and not ansible_check_mode
 
-- name: Create world mods folder
+- name: World mods folder must exist
   ansible.builtin.file:
     path: "{{ mine_home }}/{{ world.id }}/worldmods/{{( item.dir_name | default('') )}}"
     owner: minetest
@@ -24,16 +29,9 @@
   loop: "{{ game.mods }}"
 
 - name: Mods are available
-  unarchive:
-    src: "{{ item.url }}"
-    dest: "{{ mine_home }}/{{ world.id }}/worldmods/{{( item.dir_name | default('') )}}"
-    owner: minetest
-    group: minetest
-    remote_src: yes
+  include_tasks: mods.yaml
   loop: "{{ game.mods }}"
   when: "'mods' in game and not ansible_check_mode"
-  notify:
-    - 'luanti/world : Restart minetest service'
 
 - name: Configure port
   ansible.builtin.copy:

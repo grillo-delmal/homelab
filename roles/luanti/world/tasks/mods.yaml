@@ -1,0 +1,15 @@
+- name: Check if mod exists
+  stat:
+    path: "{{ mine_home }}/{{ world.id }}/worldmods/{{ item.name }}/mod.conf"
+  register: mod_path
+
+- name: Mods are available
+  unarchive:
+    src: "{{ item.url }}"
+    dest: "{{ mine_home }}/{{ world.id }}/worldmods{{ ('/' + item.name ) if (item.create_folder | default(false)) else '' }}"
+    owner: minetest
+    group: minetest
+    remote_src: yes
+  when: not mod_path.stat.exists and not ansible_check_mode
+  notify:
+    - 'luanti/world : Restart minetest service'
