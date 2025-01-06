@@ -1,0 +1,76 @@
+---
+
+- name: Prepare services
+  dnf:
+    name:
+#    - git
+    - podman
+    state: latest
+
+#- name: Git checkout
+#  ansible.builtin.git:
+#    repo: 'https://gitlab.com/veloren/auth.git'
+#    dest: /opt/auth
+#    version: crab/email_verification
+
+#- name: Build a Docker formatted image
+#  containers.podman.podman_image:
+#    name: auth-server:latest
+#    path: /opt/auth
+
+#- name: Auth dir must exists
+#  ansible.builtin.file:
+#    path: "/opt/veloren-auth/data"
+#    state: directory
+#    mode: '0755'
+
+#TODO: Configure auth
+
+#- name: Run veloren auth
+#  containers.podman.podman_container:
+#    name: auth-server
+#    image: auth-server:latest
+#    ports:
+#      - "19253:19253"
+#    volumes:
+#      - "/opt/veloren-auth/data:/opt/veloren-auth/data"
+#    state: started
+
+#TODO: Configure veloren
+- name: Game data dir must exists
+  ansible.builtin.file:
+    path: "/opt/userdata/server/server_config"
+    state: directory
+    mode: '0755'
+
+- name: Add custom smol map 
+  ansible.builtin.copy:
+    src: map.bin
+    dest: /opt/userdata/server/map.bin
+    force: true
+    mode: '0644'
+
+- name: Config settings
+  template:
+    src: '{{ item }}.j2'
+    dest: "/opt/userdata/server/server_config/{{ item }}"
+  loop:
+    - admins.ron
+    - banlist.ron
+    - description.ron
+    - settings.ron
+    - whitelist.ron
+
+- name: Run veloren
+  containers.podman.podman_container:
+    name: veloren-game-server-master
+    image: registry.gitlab.com/veloren/veloren/server-cli:weekly
+    ports:
+      - "14004:14004"
+      - "14005:14005"
+      - "14006:14006/udp"
+    env:
+      RUST_LOG: debug,common::net=info
+    volumes:
+      - "/opt/userdata:/opt/userdata"
+    state: started
