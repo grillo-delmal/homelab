@@ -17,27 +17,12 @@ options {
     secroots-file "/var/named/data/named.secroots";
     recursing-file "/var/named/data/named.recursing";
 
-    allow-query { any; };
+    allow-query { trusted; };
     recursion yes;
     dnssec-validation no;
 };
 
-view internal {
-    match-clients { trusted; };
-
-    zone "{{ domain }}" IN {
-        type primary;
-        file "/var/named/{{ domain }}.zone";
-        allow-query { trusted; };
-    };
-};
-
-view external {
-    match-clients { ! trusted; };
-
-    zone "{{ domain }}" IN {
-        type primary;
-        file "/var/named/{{ domain }}.public.zone";
-    };
-
+zone "{{ domain }}" IN {
+    type master;
+    file "/var/named/{{ domain }}.zone";
 };

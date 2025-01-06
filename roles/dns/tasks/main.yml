@@ -32,7 +32,7 @@
     timeout: 15
   tags: ddns
 
-- name: Add raw DNS result to CloudFlare
+- name: Set domain IP on CloudFlare
   cloudflare_dns:
     zone: "{{ base_domain_name }}"
     record: "{{ domain_name }}"
@@ -43,30 +43,16 @@
     solo: "yes"
     state: present
 
-- name: Check if raw public zone changes
-  template:
-    src: main.public.zone.j2
-    dest: /var/raw.main.public.zone
-  vars:
-    serial: '0'
-    public_ip: "{{ ipify_public_ip }}"
-  register: raw_public_zone
-
-- name: Create real zone
-  template:
-    src: main.public.zone.j2
-    dest: /var/named/{{ domain }}.public.zone
-  vars:
-    serial: '{{ ansible_date_time.year }}{{ "%02d" % ( ansible_date_time.month | int ) }}{{ "%02d" % ( ansible_date_time.day | int ) }}{{ "%02d" % ( ansible_date_time.hour | int ) }}'
-    public_ip: "{{ ipify_public_ip }}"
-  when: raw_public_zone is changed
-
-- name: Reload BIND config
-  systemd:
-    name: named.service
-    state: restarted
-    enabled: True
-  when: raw_public_zone is changed or raw_zone is changed
+- name: Set *.domain IP on CloudFlare
+  cloudflare_dns:
+    zone: "{{ base_domain_name }}"
+    record: "*.{{ domain_name }}"
+    type: A
+    value: "{{ ipify_public_ip }}"
+    api_token: "{{ cloudflare_token }}"
+    proxied: "no"
+    solo: "yes"
+    state: present
 
 - name: BIND is started
   systemd:
