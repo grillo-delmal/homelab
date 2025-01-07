@@ -101,19 +101,10 @@
     remote_src: yes
   when: not game_path.stat.exists and not ansible_check_mode
 
-- name: World mods folder must exist
-  ansible.builtin.file:
-    path: "{{ mine_home }}/{{ world.id }}/worldmods/{{( item.dir_name | default('') )}}"
-    owner: minetest
-    group: minetest
-    state: directory
-    mode: '0755'
-  loop: "{{ game.mods }}"
-
 - name: Mods are available
   include_tasks: mods.yaml
   loop: "{{ game.mods }}"
-  when: "'mods' in game and not ansible_check_mode"
+  when: "'mods' in game"
 
 - name: Configure port
   ansible.builtin.copy:
