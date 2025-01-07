@@ -4,3 +4,8 @@
   service:
     name: minetest@{{ world.id }}.service
     state: restarted
+
+- name: Restart mapserver service
+  service:
+    name: mapserver@{{ world.id }}.service
+    state: restarted

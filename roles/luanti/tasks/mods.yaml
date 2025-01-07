@@ -12,4 +12,4 @@
     remote_src: yes
   when: not mod_path.stat.exists and not ansible_check_mode
   notify:
-    - 'luanti/world : Restart minetest service'
+    - 'luanti : Restart minetest service'

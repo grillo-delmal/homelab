@@ -3,4 +3,4 @@
 - hosts: role_luanti
   roles:
   - role: cockpit
-  - role: luanti/world
+  - role: luanti
