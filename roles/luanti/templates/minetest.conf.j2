@@ -47,8 +47,12 @@ disallow_empty_password = true
 {% endif %}
 
 # If mapserver mod is installed, use generated key
+{% if mapserver %}
 mapserver.key = {{ mapserver_secretkey }}
+{% endif %}
 
+{% if 'settings' in world %}
 {% for item in world.settings %}
 {{ item }}
 {% endfor %}
+{% endif %}
