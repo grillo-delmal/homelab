@@ -1,12 +1,32 @@
 ---
 
+- name: Device is mounted with the correct options
+  ansible.posix.mount:
+    path: '{{ storage_btrfs_path }}'
+    src: '{{ storage_btrfs_device }}'
+    fstype: btrfs
+    opts: rw,degraded
+    state: present
+  register: mount_options
+
+- name: Remount now if options are not correct
+  ansible.posix.mount:
+    path: '{{ storage_btrfs_path }}'
+    src: '{{ storage_btrfs_device }}'
+    fstype: btrfs
+    opts: rw,degraded
+    state: remounted
+  register: mount_options
+  when: 'mount_options is changed'
+
 - name: Prepare services
   dnf:
     name:
     - btrfs
     - cockpit-files
     - cockpit-networkmanager
-    - cockpit-storaged.noarch
+    - cockpit-storaged
+    - less
     - nfs-utils
     - libnfsidmap
     - sssd-nfs-idmap
@@ -26,6 +46,10 @@
     group: admin
 
 - name: Make sure they are subvolumes
+  shell: btrfs quota enable {{ storage_btrfs_path }}
+  changed_when: False
+
+- name: Make sure quotas are enabled
   community.general.btrfs_subvolume:
     name: '{{ item.path }}'
   loop: '{{ storage_src }}'
@@ -46,3 +70,4 @@
   service:
     name: nfs-server
     state: started
+    enabled: True
