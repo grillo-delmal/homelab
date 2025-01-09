@@ -25,6 +25,7 @@
       }}
 
   roles:
+  - role: cockpit
   - role: proxmox_server
 
   tasks:
