@@ -45,11 +45,11 @@
     comment: admin
     group: admin
 
-- name: Make sure they are subvolumes
+- name: Make sure quotas are enabled
   shell: btrfs quota enable {{ storage_btrfs_path }}
   changed_when: False
 
-- name: Make sure quotas are enabled
+- name: Make sure they are subvolumes
   community.general.btrfs_subvolume:
     name: '{{ item.path }}'
   loop: '{{ storage_src }}'
@@ -65,9 +65,18 @@
     src: exports.j2
     dest: /etc/exports
     mode: '0644'
+  register: config
 
 - name: ensure nfs service is started
   service:
     name: nfs-server
     state: started
     enabled: True
+  when: config is not changed
+
+- name: ensure nfs service is started
+  service:
+    name: nfs-server
+    state: restarted
+    enabled: True
+  when: config is changed

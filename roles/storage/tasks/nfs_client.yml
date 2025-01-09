@@ -1,8 +1,6 @@
 ---
-- name: Create storage paths
-  ansible.builtin.include_tasks: nfs_paths.yml
 
-- name: Mount an NFS volume
+- name: Mount an NFS volume {{ storage_host }}:{{ storage_btrfs_path }}{{ mount_data.path }}
   ansible.posix.mount:
     src: '{{ storage_host }}:{{ storage_btrfs_path }}{{ mount_data.path }}'
     path: '{{ storage_target_path }}{{ mount_data.path }}'

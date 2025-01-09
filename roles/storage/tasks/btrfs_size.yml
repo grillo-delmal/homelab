@@ -1,3 +1,12 @@
+---
+
+- name: Set propper permissions to {{ storage_btrfs_path }}{{ storage_data.path }}
+  ansible.builtin.file:
+    path: '{{ storage_btrfs_path }}{{ storage_data.path }}'
+    state: directory
+    owner: '{{ 100000 + (storage_data.uid | default(0)) }}'
+    group: '{{ 100000 + (storage_data.gid | default(0)) }}'
+    mode: '0775'
 
 - name: Get current info
   shell: "btrfs --format=json qgroup show -reF --iec {{ storage_btrfs_path }}{{ storage_data.path }}"

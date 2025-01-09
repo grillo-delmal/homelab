@@ -17,6 +17,24 @@
   - role: proxmox_server
 
   tasks:
+    - name: Pepare folders
+      ansible.builtin.include_role:
+        name: proxmox_server
+        tasks_from: storage_paths
+      vars:
+        storage_target_path: "{{ 
+          (groups['homelab'] |
+            intersect(groups['role_storage']) |
+            map('extract', hostvars))[0].storage_target_path }}"
+      loop: "{{ 
+        groups['homelab'] |
+          intersect(groups['containers']) |
+          map('extract', hostvars) |
+          community.general.json_query('[*].storage_mnt[*].path') |
+          default([], true) | flatten }}"
+      loop_control:
+        loop_var: mount_data_path
+
     - name: Build containers
       ansible.builtin.include_role:
         name: proxmox_server
@@ -24,7 +42,6 @@
       vars:
         host_general: "{{ general }}"
         host_proxmox: "{{ proxmox }}"
-        container: "{{ item }}"
         storage_target_path: "{{ 
           (groups['homelab'] |
             intersect(groups['role_storage']) |
@@ -33,3 +50,5 @@
         groups['homelab'] |
           intersect(groups['containers']) |
           map('extract', hostvars) }}"
+      loop_control:
+        loop_var: container

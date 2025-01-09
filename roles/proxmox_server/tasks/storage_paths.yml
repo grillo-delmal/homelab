@@ -1,0 +1,14 @@
+---
+
+- name: Check if path {{ storage_target_path }}{{ mount_data_path }} exist
+  stat:
+    path: '{{ storage_target_path }}{{ mount_data_path }}'
+  register: register_name
+  ignore_errors: True
+
+- name: Path {{ storage_target_path }}{{ mount_data_path }} must exist
+  ansible.builtin.file:
+    path: '{{ storage_target_path }}{{ mount_data_path }}'
+    state: directory
+    mode: '0755'
+  when: "'stat' in register_name and not register_name.stat.exists"
