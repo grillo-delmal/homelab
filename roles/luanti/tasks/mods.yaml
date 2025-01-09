@@ -1,4 +1,6 @@
 - name: World mods folder must exist
+  become: true
+  become_user: minetest
   ansible.builtin.file:
     path: "{{ mine_home }}/{{ world.id }}/worldmods{{ ('/' + item.name ) if (item.create_folder | default(false)) else '' }}"
     owner: minetest
@@ -12,6 +14,8 @@
   register: mod_path
 
 - name: Mods are available
+  become: true
+  become_user: minetest
   unarchive:
     src: "{{ item.url }}"
     dest: "{{ mine_home }}/{{ world.id }}/worldmods{{ ('/' + item.name ) if (item.create_folder | default(false)) else '' }}"

@@ -123,7 +123,7 @@
     group: minetest
     backup: yes
   notify:
-    - 'luantiluanti : Restart minetest service'
+    - 'luanti : Restart minetest service'
 
 - name: Restart service
   service:
@@ -133,6 +133,8 @@
     
 - block:
   - name: Check if configuration changed
+    become: true
+    become_user: minetest
     template:
       src: mapserver.json.j2
       dest: "{{ mine_home }}/{{ world.id }}/test.mapserver.json"
@@ -141,6 +143,8 @@
     register: mapserver_canary
 
   - name: Configure mapserver port
+    become: true
+    become_user: minetest
     template:
       src: mapserver.json.j2
       dest: "{{ mine_home }}/{{ world.id }}/mapserver.json"
@@ -151,6 +155,8 @@
       - 'luanti : Restart mapserver service'
 
   - name: Wait for world to exist
+    become: true
+    become_user: minetest
     ansible.builtin.wait_for:
       path: "{{ mine_home }}/{{ world.id }}/map.sqlite"
       state: present
