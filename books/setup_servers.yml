@@ -13,6 +13,17 @@
       host: "{{ ansible_host }}"
       password: "{{ proxmox_password }}"
 
+    storage_src: |
+      {{
+        groups['all'] |
+          map('extract', hostvars) |
+          map('dict2items') |
+          map('selectattr', 'key', 'in', ['storage_mnt']) |
+          map('items2dict') |
+          community.general.json_query('[*].storage_mnt') |
+          flatten
+      }}
+
   roles:
   - role: proxmox_server
 
@@ -22,10 +33,10 @@
         name: proxmox_server
         tasks_from: storage_paths
       vars:
-        storage_target_path: "{{ 
+        storage_btrfs_path: "{{ 
           (groups['homelab'] |
             intersect(groups['role_storage']) |
-            map('extract', hostvars))[0].storage_target_path }}"
+            map('extract', hostvars))[0].storage_btrfs_path }}"
       loop: "{{ 
         groups['homelab'] |
           intersect(groups['containers']) |
@@ -42,10 +53,10 @@
       vars:
         host_general: "{{ general }}"
         host_proxmox: "{{ proxmox }}"
-        storage_target_path: "{{ 
+        storage_btrfs_path: "{{ 
           (groups['homelab'] |
             intersect(groups['role_storage']) |
-            map('extract', hostvars))[0].storage_target_path }}"
+            map('extract', hostvars))[0].storage_btrfs_path }}"
       loop: "{{ 
         groups['homelab'] |
           intersect(groups['containers']) |

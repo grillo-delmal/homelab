@@ -1,3 +1,0 @@
----
-nfs_config: "/etc/exports"
-nfs_config_backup: "/mnt/backups"

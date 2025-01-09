@@ -114,6 +114,9 @@ roles:
 ```yml
 ansible_host: <ip_addr>
 ns_name: root
+
+storage_btrfs_path: /bindmounts
+storage_btrfs_device: /dev/sdb0
 ```
 
 ### inventory/host_vars/<container_0>.yml
@@ -137,32 +140,6 @@ dns_config:
   - <ip of resolver when not asking about this domain>
 ```
 
-### inventory/host_vars/<container_1>.yml
-
-```yml
-ansible_host: <ip_addr>
-
-# Container
-vmid: <vmid>
-ns_name: storage
-disk: 'local-lvm:4'
-mounts:
-  dev0: /dev/sdb
-  mp0: /dev/sdb,mp=/mnt
-netif:
-  - "ip=<storage_priv_bridge_ip>,bridge=<storage_priv_bridge_name>"
-cores: 1
-memory: 1024
-unprivileged: True
-features:
-  - nesting=1
-
-# Storage Role
-storage_host: <storage_priv_bridge_ip>
-storage_nfs_listen: <storage_priv_subnet>
-storage_btrfs_path: /mnt
-storage_target_path: /bindmounts
-```
 
 ### inventory/host_vars/<container_2>.yml
 

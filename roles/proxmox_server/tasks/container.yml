@@ -48,7 +48,7 @@
                 ) |
                 map('join', ',mp=')
               ) |
-              product([storage_target_path]) |
+              product([storage_btrfs_path]) |
               map('reverse') |
               map('join')
             )) |

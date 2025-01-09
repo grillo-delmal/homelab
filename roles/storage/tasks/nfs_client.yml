@@ -1,9 +1,0 @@
----
-
-- name: Mount an NFS volume {{ storage_host }}:{{ storage_btrfs_path }}{{ mount_data.path }}
-  ansible.posix.mount:
-    src: '{{ storage_host }}:{{ storage_btrfs_path }}{{ mount_data.path }}'
-    path: '{{ storage_target_path }}{{ mount_data.path }}'
-    opts: rw,sync,hard
-    state: mounted
-    fstype: nfs
