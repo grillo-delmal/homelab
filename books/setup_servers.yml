@@ -33,11 +33,6 @@
       ansible.builtin.include_role:
         name: proxmox_server
         tasks_from: storage_paths
-      vars:
-        storage_btrfs_path: "{{ 
-          (groups['homelab'] |
-            intersect(groups['role_storage']) |
-            map('extract', hostvars))[0].storage_btrfs_path }}"
       loop: "{{ 
         groups['homelab'] |
           intersect(groups['containers']) |
@@ -54,10 +49,6 @@
       vars:
         host_general: "{{ general }}"
         host_proxmox: "{{ proxmox }}"
-        storage_btrfs_path: "{{ 
-          (groups['homelab'] |
-            intersect(groups['role_storage']) |
-            map('extract', hostvars))[0].storage_btrfs_path }}"
       loop: "{{ 
         groups['homelab'] |
           intersect(groups['containers']) |
