@@ -1,27 +1,35 @@
-- name: World mods folder must exist
-  become: true
-  become_user: minetest
-  ansible.builtin.file:
-    path: "{{ mine_home }}/{{ world.id }}/worldmods{{ ('/' + item.name ) if (item.create_folder | default(false)) else '' }}"
-    owner: minetest
-    group: minetest
-    state: directory
-    mode: '0755'
+- name: Download mod
+  ansible.builtin.get_url:
+    url: '{{ item.url }}'
+    dest: "/opt/mods/{{ ( item.url | urlsplit('path') | split('/'))[-1] }}"
+  register: mod_archive
 
-- name: Check if mod exists
-  stat:
-    path: "{{ mine_home }}/{{ world.id }}/worldmods/{{ item.name }}/mod.conf"
-  register: mod_path
+- name: Install new mod
+  block:
+  - name: Remove current version of the mod if exist
+    file:
+      path: "{{ mine_home }}/{{ world.id }}/worldmods/{{ item.name }}"
+      state: absent
 
-- name: Mods are available
-  become: true
-  become_user: minetest
-  unarchive:
-    src: "{{ item.url }}"
-    dest: "{{ mine_home }}/{{ world.id }}/worldmods{{ ('/' + item.name ) if (item.create_folder | default(false)) else '' }}"
-    owner: minetest
-    group: minetest
-    remote_src: yes
-  when: not mod_path.stat.exists and not ansible_check_mode
+  - name: World mods folder must exist
+    become: true
+    become_user: minetest
+    ansible.builtin.file:
+      path: "{{ mine_home }}/{{ world.id }}/worldmods{{ ('/' + item.name ) if (item.create_folder | default(false)) else '' }}"
+      owner: minetest
+      group: minetest
+      state: directory
+      mode: '0755'
+
+  - name: Mods is available
+    become: true
+    become_user: minetest
+    unarchive:
+      src: "/opt/mods/{{ ( item.url | urlsplit('path') | split('/'))[-1] }}"
+      dest: "{{ mine_home }}/{{ world.id }}/worldmods{{ ('/' + item.name ) if (item.create_folder | default(false)) else '' }}"
+      owner: minetest
+      group: minetest
+      remote_src: yes
+  when: mod_archive is changed and not ansible_check_mode
   notify:
     - 'luanti : Restart minetest service'
