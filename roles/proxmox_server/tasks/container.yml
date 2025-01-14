@@ -10,6 +10,7 @@
     _proxmox_lxc_vm_info
 
 - name: Container {{ container.hostname }} created on {{ host_proxmox.node }}
+  no_log: True
   when: _proxmox_lxc_vm_info.proxmox_vms | length == 0
   vars:
     default_net:
@@ -87,6 +88,7 @@
     state: present
 
 - name: Container {{ container.hostname }} on {{ host_proxmox.node }} updated
+  no_log: True
   when: _proxmox_lxc_vm_info.proxmox_vms | length > 0
   vars:
     default_net:
@@ -132,6 +134,7 @@
     update: true
 
 - name: Container {{ container.hostname }} is running on {{ host_proxmox.node }}
+  no_log: True
   community.general.proxmox:
     vmid: '{{ container.vmid }}'
     api_host: '{{ host_proxmox.host }}'
