@@ -3,6 +3,7 @@
 - import_playbook: books/setup_servers.yml
 - import_playbook: books/build_dns.yml
 - import_playbook: books/build_traefik.yml
+- import_playbook: books/build_forgejo.yml
 # Public apps
 - import_playbook: books/build_ai.yml
 - import_playbook: books/build_maruchan.yml

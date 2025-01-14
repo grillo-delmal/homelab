@@ -1,0 +1,124 @@
+- name: Install forgejo and deps
+  dnf:
+    name:
+    - dnf
+    - dnf-plugins-core
+
+- name: Enable forgejo from mdwalters/forgejo
+  community.general.copr:
+    host: copr.fedorainfracloud.org
+    state: enabled
+    name: mdwalters/forgejo
+
+- name: Install forgejo and deps
+  dnf:
+    name:
+    - forgejo
+    - git
+    - git-lfs
+    - sqlite
+
+- name: hotfix forgejo until patch get's merged
+  block:
+
+    - name: Replace forgejo.service with the correct one 
+      ansible.builtin.copy:
+        src: forgejo.service
+        dest: /usr/lib/systemd/system/forgejo.service
+        force: true
+        mode: '0644'
+      register: patch_forgejo
+
+    - name: Just force systemd to reread configs
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+      when: patch_forgejo is changed
+
+    - name: Ensure group "git" exists
+      ansible.builtin.group:
+        name: git
+        system: true
+        state: present
+
+    - name: Create a user 'git' with a home directory
+      ansible.builtin.user:
+        name: git
+        group: git
+        shell: /bin/bash
+        home: /home/git
+        system: true
+        create_home: true
+
+- name: var folder exists
+  file:
+    path: "/var/lib/forgejo"
+    state: directory
+    owner: git
+    group: git
+    mode: '0750'
+
+- name: etc folder exists
+  file:
+    path: "/etc/forgejo"
+    state: directory
+    owner: root
+    group: git
+    mode: '0750'
+
+- name: Upload the app.ini file
+  template:
+    src: app.ini.j2
+    dest: "/etc/forgejo/app.ini"
+    owner: root
+    group: git
+    mode: '0660'
+
+- name: Start forgejo service
+  service:
+    name: forgejo.service
+    enabled: true
+    state: started
+
+- name: Wait for server to exist
+  ansible.builtin.wait_for:
+    path: "/var/lib/forgejo/data/forgejo.db"
+    state: present
+
+- name: Wait until forgejo server is available
+  uri:
+    url: http://127.0.0.1:3000
+  register: result
+  until: "result.status == 200"
+  retries: 5
+  delay: 2
+
+- name: Check users
+  shell: 
+    "sudo -u git forgejo \
+      -w /var/lib/forgejo \
+      -c /etc/forgejo/app.ini \
+      admin user list --admin | \
+    awk '{print $2}' | \
+    grep -w {{ forgejo_config.admin.username }}"
+  register: admin_user_query
+  changed_when: False
+  ignore_errors: True
+
+- name: Create user if it doesn't exist
+  shell:
+    "sudo -u git forgejo \
+      -w /var/lib/forgejo \
+      -c /etc/forgejo/app.ini \
+      admin user create \
+        --username {{ forgejo_config.admin.username }} \
+        --password {{ forgejo_config.admin.password }} \
+        --email {{ forgejo_config.admin.email }} \
+        --admin"
+  when: admin_user_query is failed
+  no_log: True
+
+- name: Change permissions
+  file:
+    path: "/etc/forgejo/app.ini"
+    state: file
+    mode: "0640"
