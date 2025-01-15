@@ -1,4 +1,16 @@
 ---
+- name: Let's Encrypt deps on apt
+  apt:
+    name: python3-cryptography
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Let's Encrypt deps on dnf
+  dnf:
+    name: python3-cryptography
+    state: present
+  when: ansible_os_family == "RedHat"
+
 - name: Check validity of existing cert
   when: not letsencrypt_force_renew
   block:

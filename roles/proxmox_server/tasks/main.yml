@@ -20,11 +20,6 @@
     mode: '0755'
 
 # Add ssl cert
-- name: Let's Encrypt deps on apt
-  apt:
-    name: python3-cryptography
-    state: present
-
 - name: Manage SSL certs
   include_role: 
     name: letsencrypt
