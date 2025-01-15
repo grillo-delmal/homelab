@@ -1,0 +1,11 @@
+---
+
+- name: Restart forgejo service
+  service:
+    name: forgejo.service
+    state: restarted
+
+- name: Restart sshd service
+  service:
+    name: sshd.service
+    state: restarted

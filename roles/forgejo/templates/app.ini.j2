@@ -19,9 +19,8 @@ LOG_SQL = false
 ROOT = /var/lib/forgejo/data/forgejo-repositories
 
 [server]
-SSH_DOMAIN = {{ forgejo_config.app.server.ssh_domain }}
 DOMAIN = {{ forgejo_config.app.server.domain }}
-HTTP_PORT = 3000
+SSH_DOMAIN = {{ forgejo_config.app.server.ssh_domain }}
 ROOT_URL = {{ forgejo_config.app.server.root_url }}
 APP_DATA_PATH = /var/lib/forgejo/data
 DISABLE_SSH = false
@@ -29,9 +28,11 @@ START_SSH_SERVER = false
 SSH_PORT = 22
 LFS_START_SERVER = true
 OFFLINE_MODE = true
-HTTP_ADDR = {{ forgejo_config.app.server.http_addr }}
-SSH_LISTEN_HOST = {{ forgejo_config.app.server.ssh_listen_host }}
-SSH_LISTEN_PORT = {{ forgejo_config.app.server.ssh_listen_port }}
+PROTOCOL = {{ forgejo_config.app.server.protocol | default(http) }}
+HTTP_ADDR = {{ forgejo_config.app.server.http_addr | default('0.0.0.0') }}
+HTTP_PORT= {{ forgejo_config.app.server.http_port | default(3000) }}
+CERT_FILE=/var/lib/forgejo/certs/fullchain_{{ letsencrypt_domain_name }}.pem
+KEY_FILE=/var/lib/forgejo/certs/{{ letsencrypt_domain_name }}.key
 
 [lfs]
 PATH = /var/lib/forgejo/data/lfs

@@ -45,7 +45,7 @@
         name: git
         group: git
         shell: /bin/bash
-        home: /home/git
+        home: /var/lib/forgejo
         system: true
         create_home: true
 
@@ -65,6 +65,12 @@
     group: git
     mode: '0750'
 
+- name: Add cap_net_bind_service to forgejo
+  community.general.capabilities:
+    path: /usr/bin/forgejo
+    capability: cap_net_bind_service+ep
+    state: present
+
 - name: Upload the app.ini file
   template:
     src: app.ini.j2
@@ -72,6 +78,16 @@
     owner: root
     group: git
     mode: '0660'
+  notify:
+    - 'forgejo : Restart forgejo service'
+
+- name: Upload sshd conf
+  ansible.builtin.copy:
+    src: 60-forgejo.conf
+    dest: /etc/ssh/sshd_config.d/60-forgejo.conf
+    mode: '0644'
+  notify:
+    - 'forgejo : Restart sshd service'
 
 - name: Start forgejo service
   service:
