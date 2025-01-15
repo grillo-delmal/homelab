@@ -26,6 +26,8 @@
   vars:
     serial: '{{ ansible_date_time.year }}{{ "%02d" % ( ansible_date_time.month | int ) }}{{ "%02d" % ( ansible_date_time.day | int ) }}{{ "%02d" % ( ansible_date_time.hour | int ) }}'
   when: raw_zone is changed
+  notify:
+    - 'dns : Restart named service'
 
 - name: Get public IP
   ipify_facts:
@@ -53,6 +55,8 @@
     proxied: "no"
     solo: "yes"
     state: present
+  notify:
+    - 'dns : Restart named service'
 
 - name: BIND is started
   systemd:

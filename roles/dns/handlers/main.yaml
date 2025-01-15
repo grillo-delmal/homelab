@@ -1,0 +1,6 @@
+---
+
+- name: Restart named service
+  service:
+    name: named.service
+    state: restarted
