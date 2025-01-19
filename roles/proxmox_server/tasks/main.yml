@@ -75,6 +75,7 @@
     opts: rw,degraded
     state: mounted
   register: mount_options
+  ignore_errors: true
 
 - name: Remount now if options are not correct
   ansible.posix.mount:
@@ -83,8 +84,7 @@
     fstype: btrfs
     opts: rw,degraded
     state: remounted
-  register: mount_options
-  when: 'mount_options is changed'
+  when: 'mount_options is changed or mount_options is failed'
 
 - name: Make sure quotas are enabled
   shell: btrfs quota enable {{ storage_btrfs_path }}
