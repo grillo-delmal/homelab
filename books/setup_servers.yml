@@ -53,6 +53,17 @@
       loop: "{{ 
         groups['homelab'] |
           intersect(groups['containers']) |
-          map('extract', hostvars) }}"
+          map('extract', hostvars) |
+          map('dict2items') |
+          map(
+            'selectattr', 'key', 'in', [
+              'hostname', 
+              'ansible_host', 
+              'storage_mnt', 
+              'proxmox_container'
+            ]
+          ) |
+          map('items2dict')
+         }}"
       loop_control:
         loop_var: container
