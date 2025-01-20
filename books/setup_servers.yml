@@ -11,11 +11,11 @@
       user: "root@pam"
       node: "{{ hostname }}"
       host: "{{ ansible_host }}"
-      password: "{{ master_password }}"
+      password: "{{ proxmox_server.password }}"
 
     storage_src: |
       {{
-        groups['all'] |
+        groups['homelab'] |
           map('extract', hostvars) |
           map('dict2items') |
           map('selectattr', 'key', 'in', ['storage_mnt']) |

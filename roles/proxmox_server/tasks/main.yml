@@ -65,8 +65,8 @@
 
 - name: Device is mounted with the correct options
   ansible.posix.mount:
-    path: '{{ storage_btrfs_path }}'
-    src: '{{ storage_btrfs_device }}'
+    path: '{{ btrfs_storage.path }}'
+    src: '{{ btrfs_storage.device }}'
     fstype: btrfs
     opts: rw,degraded
     state: mounted
@@ -75,15 +75,15 @@
 
 - name: Remount now if options are not correct
   ansible.posix.mount:
-    path: '{{ storage_btrfs_path }}'
-    src: '{{ storage_btrfs_device }}'
+    path: '{{ btrfs_storage.path }}'
+    src: '{{ btrfs_storage.device }}'
     fstype: btrfs
     opts: rw,degraded
     state: remounted
   when: 'mount_options is changed or mount_options is failed'
 
 - name: Make sure quotas are enabled
-  shell: btrfs quota enable {{ storage_btrfs_path }}
+  shell: btrfs quota enable {{ btrfs_storage.path }}
   changed_when: False
 
 - name: Prepare all subvolumes
