@@ -68,7 +68,7 @@
       content: "{{ mapserver_secretkey }}"
       mode: 0600
 
-  when: mapserver is defined
+  when: luanti_config.mapserver is defined
 
 - name: Games folder exists
   file:
@@ -84,8 +84,8 @@
 
 - name: set minetest home valiable
   set_fact:
-    mine_sysconfig: "/etc/sysconfig/minetest/{{ world.id }}.conf"
-    mine_config: "/etc/minetest/{{ world.id }}.conf"
+    mine_sysconfig: "/etc/sysconfig/minetest/{{ luanti_config.world.id }}.conf"
+    mine_config: "/etc/minetest/{{ luanti_config.world.id }}.conf"
 
 - name: Games folder archive exists
   file:
@@ -96,20 +96,20 @@
 
 - name: Download game
   ansible.builtin.get_url:
-    url: '{{ game.url }}'
-    dest: "/opt/games/{{ ( game.url | urlsplit('path') | split('/'))[-1] }}"
+    url: '{{ luanti_config.game.url }}'
+    dest: "/opt/games/{{ ( luanti_config.game.url | urlsplit('path') | split('/'))[-1] }}"
   register: game_archive
 
 - name: Install new game
   block:
   - name: Remove current version of the game if exist
     file:
-      path: "{{ mine_home }}/.minetest/games/{{ game.name }}"
+      path: "{{ mine_home }}/.minetest/games/{{ luanti_config.game.name }}"
       state: absent
 
   - name: Game is available
     unarchive:
-      src: "/opt/games/{{ ( game.url | urlsplit('path') | split('/'))[-1] }}"
+      src: "/opt/games/{{ ( luanti_config.game.url | urlsplit('path') | split('/'))[-1] }}"
       dest: "{{ mine_home }}/.minetest/games/"
       owner: minetest
       group: minetest
@@ -120,7 +120,7 @@
 
 - name: List installed mods
   ansible.builtin.find:
-    paths: "{{ mine_home }}/{{ world.id }}/worldmods/"
+    paths: "{{ mine_home }}/{{ luanti_config.world.id }}/worldmods/"
     file_type: directory
   register: installed_mods
 
@@ -128,7 +128,7 @@
   file:
     path: "item.path"
     state: absent
-  when: "(item.path | split('/') )[-1] not in ( game.mods | default([]) | map(attribute='name') )"
+  when: "(item.path | split('/') )[-1] not in ( luanti_config.game.mods | default([]) | map(attribute='name') )"
   loop: "{{ installed_mods.files }}"
 
 - name: Mods folder archive exists
@@ -140,14 +140,14 @@
 
 - name: Mods are available
   include_tasks: mods.yaml
-  loop: "{{ game.mods }}"
-  when: "'mods' in game"
+  loop: "{{ luanti_config.game.mods }}"
+  when: "'mods' in luanti_config.game"
 
 - name: Configure port
   ansible.builtin.copy:
     content: |
-      PORT={{ world.port }}
-      GAMEID={{ game.name }}
+      PORT={{ luanti_config.world.port }}
+      GAMEID={{ luanti_config.game.name }}
     dest: "{{ mine_sysconfig }}"
   notify:
     - 'luanti : Restart minetest service'
@@ -164,7 +164,7 @@
 
 - name: Start service
   service:
-    name: minetest@{{ world.id }}.service
+    name: minetest@{{ luanti_config.world.id }}.service
     enabled: true
     state: started
     
@@ -174,7 +174,7 @@
     become_user: minetest
     template:
       src: mapserver.json.j2
-      dest: "{{ mine_home }}/{{ world.id }}/test.mapserver.json"
+      dest: "{{ mine_home }}/{{ luanti_config.world.id }}/test.mapserver.json"
       owner: minetest
       group: minetest
     register: mapserver_canary
@@ -184,7 +184,7 @@
     become_user: minetest
     template:
       src: mapserver.json.j2
-      dest: "{{ mine_home }}/{{ world.id }}/mapserver.json"
+      dest: "{{ mine_home }}/{{ luanti_config.world.id }}/mapserver.json"
       owner: minetest
       group: minetest
     when: mapserver_canary is changed
@@ -195,14 +195,14 @@
     become: true
     become_user: minetest
     ansible.builtin.wait_for:
-      path: "{{ mine_home }}/{{ world.id }}/map.sqlite"
+      path: "{{ mine_home }}/{{ luanti_config.world.id }}/map.sqlite"
       state: present
 
   - name: Start Minetest-mapserver
     service:
-      name: mapserver@{{ world.id }}.service
+      name: mapserver@{{ luanti_config.world.id }}.service
       enabled: true
       state: started
 
-  when: mapserver is defined
+  when: luanti_config.mapserver is defined
 

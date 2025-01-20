@@ -4,55 +4,55 @@
 #    When running a server, clients connecting with this name are admins.
 #    When starting from the main menu, this is overridden.
 #    type: string
-name = {{ world.admin_name }}
+name = {{ luanti_config.world.admin_name }}
 
 ### Serverlist and MOTD
 
 #    Name of the server, to be displayed when players join and in the serverlist.
 #    type: string
-server_name = {{ world.name }}
+server_name = {{ luanti_config.world.name }}
 
 #    Description of server, to be displayed when players join and in the serverlist.
 #    type: string
-server_description = {{ world.description }}
+server_description = {{ luanti_config.world.description }}
 
 #    Domain name of server, to be displayed in the serverlist.
 #    type: string
-server_address = {{ world.host }}
+server_address = {{ luanti_config.world.host }}
 
 #    Homepage of server, to be displayed in the serverlist.
 #    type: string
-server_url = {{ world.url }}
+server_url = {{ luanti_config.world.url }}
 
 #    Automatically report to the serverlist.
 #    type: bool
-server_announce = {{ world.announce }}
+server_announce = {{ luanti_config.world.announce }}
 
 ## Server Security
 
 #    New users need to input this password.
 #    type: string
-{% if 'user_password' not in game or game.user_password == None  or game.user_password == '' %}
+{% if 'user_password' not in luanti_config.game or luanti_config.game.user_password == None  or luanti_config.game.user_password == '' %}
 # default_password = 
 {% else %}
-default_password = {{ game.user_password }}
+default_password = {{ luanti_config.game.user_password }}
 {% endif %}
 
 #    If enabled, players cannot join without a password or change theirs to an empty password.
 #    type: bool
-{% if 'user_password' not in game or game.user_password == None  or game.user_password == '' %}
+{% if 'user_password' not in luanti_config.game or luanti_config.game.user_password == None  or luanti_config.game.user_password == '' %}
 disallow_empty_password = false
 {% else %}
 disallow_empty_password = true
 {% endif %}
 
 # If mapserver mod is installed, use generated key
-{% if mapserver %}
+{% if luanti_config.mapserver %}
 mapserver.key = {{ mapserver_secretkey }}
 {% endif %}
 
-{% if 'settings' in world %}
-{% for item in world.settings %}
+{% if 'settings' in luanti_config.world %}
+{% for item in luanti_config.world.settings %}
 {{ item }}
 {% endfor %}
 {% endif %}
