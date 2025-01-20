@@ -26,6 +26,7 @@
 
   roles:
   - role: cockpit
+  - role: letsencrypt
   - role: proxmox_server
 
   tasks:

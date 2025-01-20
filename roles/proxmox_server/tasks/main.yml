@@ -19,11 +19,7 @@
       systemctl start sshd
     mode: '0755'
 
-# Add ssl cert
-- name: Manage SSL certs
-  include_role: 
-    name: letsencrypt
-
+# Add ssl cert if exists
 - name: Check src chain
   stat:
     path: "/etc/letsencrypt/certs/fullchain_{{ letsencrypt_domain_name }}.pem"
