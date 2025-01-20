@@ -28,11 +28,9 @@ START_SSH_SERVER = false
 SSH_PORT = 22
 LFS_START_SERVER = true
 OFFLINE_MODE = true
-PROTOCOL = {{ forgejo_config.app.server.protocol | default(http) }}
+PROTOCOL = {{ forgejo_config.app.server.protocol | default('http') }}
 HTTP_ADDR = {{ forgejo_config.app.server.http_addr | default('0.0.0.0') }}
 HTTP_PORT= {{ forgejo_config.app.server.http_port | default(3000) }}
-CERT_FILE=/var/lib/forgejo/certs/fullchain_{{ letsencrypt_domain_name }}.pem
-KEY_FILE=/var/lib/forgejo/certs/{{ letsencrypt_domain_name }}.key
 
 [lfs]
 PATH = /var/lib/forgejo/data/lfs

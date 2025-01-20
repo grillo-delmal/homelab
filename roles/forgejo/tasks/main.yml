@@ -68,18 +68,8 @@
 - name: Add cap_net_bind_service to forgejo
   community.general.capabilities:
     path: /usr/bin/forgejo
-    capability: cap_net_bind_service+ep
+    capability: cap_net_bind_service=ep
     state: present
-
-- name: Upload the app.ini file
-  template:
-    src: app.ini.j2
-    dest: "/etc/forgejo/app.ini"
-    owner: root
-    group: git
-    mode: '0660'
-  notify:
-    - 'forgejo : Restart forgejo service'
 
 - name: Upload sshd conf
   ansible.builtin.copy:
@@ -88,6 +78,26 @@
     mode: '0644'
   notify:
     - 'forgejo : Restart sshd service'
+
+- name: Upload the test.app.ini file
+  template:
+    src: app.ini.j2
+    dest: "/etc/forgejo/test.app.ini"
+    owner: root
+    group: git
+    mode: '0640'
+  register: ini_process
+
+- name: Upload the app.ini file if test changed
+  template:
+    src: app.ini.j2
+    dest: "/etc/forgejo/app.ini"
+    owner: root
+    group: git
+    mode: '0660'
+  when: ini_process is changed
+  notify:
+    - 'forgejo : Restart forgejo service'
 
 - name: Start forgejo service
   service:
@@ -102,7 +112,7 @@
 
 - name: Wait until forgejo server is available
   uri:
-    url: http://127.0.0.1:3000
+    url: "{{ forgejo_config.app.server.protocol | default('http') }}://127.0.0.1:{{ forgejo_config.app.server.http_port | default(3000) }}"
   register: result
   until: "result.status == 200"
   retries: 5
