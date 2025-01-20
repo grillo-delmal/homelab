@@ -10,7 +10,7 @@
     state: directory
     owner: '{{ 100000 + (storage_data.uid | default(0)) }}'
     group: '{{ 100000 + (storage_data.gid | default(0)) }}'
-    mode: '0775'
+    mode: '{{ storage_data.mode | default("0775") }}'
 
 - name: Get current qgroup
   shell: "btrfs qgroup show -reF --iec {{ storage_btrfs_path }}{{ storage_data.path }} | sed -n 3p | awk '{print $1}'"
