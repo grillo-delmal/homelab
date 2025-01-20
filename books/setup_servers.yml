@@ -11,7 +11,7 @@
       user: "root@pam"
       node: "{{ hostname }}"
       host: "{{ ansible_host }}"
-      password: "{{ proxmox_password }}"
+      password: "{{ master_password }}"
 
     storage_src: |
       {{

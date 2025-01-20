@@ -246,7 +246,7 @@ traefik_dashboard_whitelist:
 
 ```yml
 # make sure to encrypt your password using vault
-proxmox_password: 12345
+master_password: 12345
 gateway_ip: <gateway>
 
 domain_name: <domain>
