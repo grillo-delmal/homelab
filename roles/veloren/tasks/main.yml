@@ -61,6 +61,12 @@
     - settings.ron
     - whitelist.ron
 
+- name: Pull an image
+  containers.podman.podman_image:
+    name: registry.gitlab.com/veloren/veloren/server-cli:weekly
+    force: true
+  register: get_image
+
 - name: Run veloren
   containers.podman.podman_container:
     name: veloren-game-server-master
@@ -74,3 +80,22 @@
     volumes:
       - "/opt/userdata:/opt/userdata"
     state: started
+  when: get_image is not changed
+
+- name: Run veloren, restart if running
+  containers.podman.podman_container:
+    name: veloren-game-server-master
+    image: registry.gitlab.com/veloren/veloren/server-cli:weekly
+    ports:
+      - "14004:14004"
+      - "14005:14005"
+      - "14006:14006/udp"
+    env:
+      RUST_LOG: debug,common::net=info
+    volumes:
+      - "/opt/veloren/userdata:/opt/userdata"
+      - "/opt/veloren/assets:/opt/assets"
+    state: started
+    recreate: true
+    force_restart: true
+  when: get_image is changed
