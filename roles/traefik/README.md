@@ -22,7 +22,7 @@ traefik_config:
         rule: Host(`<smth>.{{ domain_name }}`)
         service: <smth>
         middlewares:
-        - whitelist
+        - <smth>-whitelist
     services:
       <smth>:
         loadBalancer:
