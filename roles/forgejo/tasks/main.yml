@@ -1,10 +1,10 @@
-- name: Install forgejo and deps
+- name: Enable COPR on dnf
   dnf:
     name:
     - dnf
     - dnf-plugins-core
 
-- name: Enable forgejo from mdwalters/forgejo
+- name: Enable forgejo from mdwalters/forgejo COPR
   community.general.copr:
     host: copr.fedorainfracloud.org
     state: enabled
@@ -21,22 +21,23 @@
 - name: hotfix forgejo until patch get's merged
   block:
 
-    - name: Replace forgejo.service with the correct one 
+    - name: Add forgejo-alt.service 
       ansible.builtin.copy:
-        src: forgejo.service
-        dest: /usr/lib/systemd/system/forgejo.service
+        src: forgejo-alt.service
+        dest: /usr/lib/systemd/system/forgejo-alt.service
         force: true
         mode: '0644'
-      register: patch_forgejo
+      register: forgejo_service
 
     - name: Just force systemd to reread configs
       ansible.builtin.systemd_service:
         daemon_reload: true
-      when: patch_forgejo is changed
+      when: forgejo_service is changed
 
     - name: Ensure group "git" exists
       ansible.builtin.group:
         name: git
+        gid: 995
         system: true
         state: present
 
@@ -44,6 +45,7 @@
       ansible.builtin.user:
         name: git
         group: git
+        uid: 995
         shell: /bin/bash
         home: /var/lib/forgejo
         system: true
@@ -101,7 +103,7 @@
 
 - name: Start forgejo service
   service:
-    name: forgejo.service
+    name: forgejo-alt.service
     enabled: true
     state: started
 

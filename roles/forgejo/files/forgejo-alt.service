@@ -4,7 +4,7 @@ After=syslog.target
 After=network.target
 
 [Service]
-# RestartSec=2s
+RestartSec=2s
 Type=simple
 User=git
 Group=git

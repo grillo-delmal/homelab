@@ -2,7 +2,7 @@
 
 - name: Restart forgejo service
   service:
-    name: forgejo.service
+    name: forgejo-alt.service
     state: restarted
 
 - name: Restart sshd service
