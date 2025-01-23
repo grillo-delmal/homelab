@@ -1,0 +1,6 @@
+---
+
+- hosts: role_semaphore
+  roles:
+  - role: cockpit
+  - role: semaphore

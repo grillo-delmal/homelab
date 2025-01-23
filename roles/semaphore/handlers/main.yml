@@ -1,0 +1,11 @@
+---
+
+- name: Restart semaphore service
+  service:
+    name: semaphoreui-alt.service
+    state: restarted
+
+- name: Restart sshd service
+  service:
+    name: sshd.service
+    state: restarted

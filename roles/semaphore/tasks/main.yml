@@ -1,0 +1,82 @@
+- name: Enable COPR on dnf 
+  dnf:
+    name:
+    - dnf
+    - dnf-plugins-core
+
+- name: Enable semaphore grillo-delmal/semaphore
+  community.general.copr:
+    host: copr.fedorainfracloud.org
+    state: enabled
+    name: grillo-delmal/semaphore
+
+- name: Install semaphore and deps
+  dnf:
+    name:
+    - semaphore
+
+- name: Add semaphoreui-alt.service 
+  ansible.builtin.copy:
+    src: semaphoreui-alt.service
+    dest: /usr/lib/systemd/system/semaphoreui-alt.service
+    force: true
+    mode: '0644'
+  register: semaphore_service
+
+- name: Just force systemd to reread configs
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+  when: semaphore_service is changed
+
+- name: Ensure group "semaphore" exists
+  ansible.builtin.group:
+    name: semaphore
+    gid: 995
+    system: true
+    state: present
+
+- name: Create a user 'semaphore' with a home directory
+  ansible.builtin.user:
+    name: semaphore
+    group: semaphore
+    uid: 995
+    shell: /bin/bash
+    home: /var/lib/semaphore
+    system: true
+    create_home: true
+
+- name: var folder exists
+  file:
+    path: "/var/lib/semaphore"
+    state: directory
+    owner: semaphore
+    group: semaphore
+    mode: '0750'
+
+- name: Check if config.json exists
+  stat:
+    path: '/var/lib/semaphore'
+  register: config_file
+
+- name: Initialize semaphore
+  block:
+    - name: Copy input template
+      template:
+        src: semaphore.stdin.j2
+        owner: semaphore
+        group: semaphore
+        mode: '0640'
+        dest: /opt/semaphore.stdin
+    - name: Run setup
+      shell: sudo -u semaphore semaphore setup --config /var/lib/semaphore/config.json < /opt/semaphore.stdin
+    - name: Remove stdin file
+      file:
+        path: "/opt/semaphore.stdin"
+        state: absent
+  when: "'stat' in config_file and config_file.stat.exists"
+
+- name: Start semaphoreui service
+  service:
+    name: semaphoreui-alt.service
+    enabled: true
+    state: started
