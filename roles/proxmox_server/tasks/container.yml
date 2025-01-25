@@ -154,3 +154,11 @@
     pct exec {{ container.proxmox_container.vmid }} -- chmod +x /opt/setup.sh
     pct exec {{ container.proxmox_container.vmid }} -- /opt/setup.sh
   when: result is failed
+
+- name: Install ssh_keys
+  ansible.builtin.include_tasks:  ssh_keys.yml
+  vars:
+    storage_data: '{{ item }}'
+  loop: '{{ general.pub_keys }}'
+  loop_control:
+    loop_var: pub_key

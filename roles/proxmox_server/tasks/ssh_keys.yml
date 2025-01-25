@@ -1,0 +1,20 @@
+- name: Check if public key is available
+  ansible.builtin.shell: pct exec {{ container.proxmox_container.vmid }} -- grep -Fxq "{{ pub_key }}" /root/.ssh/authorized_keys
+  register: root_result
+  ignore_errors: True
+  changed_when: False
+
+- name: Install public key in {{ container.hostname }} on {{ host_proxmox.node }}
+  ansible.builtin.shell: pct exec {{ container.proxmox_container.vmid }} -- sed -i '$ a\{{ pub_key }}' /root/.ssh/authorized_keys
+  when: root_result is failed
+
+- name: Check if public key is available
+  ansible.builtin.shell: pct exec {{ container.proxmox_container.vmid }} -- grep -Fxq "{{ pub_key }}" /home/ansible/.ssh/authorized_keys
+  register: ansible_result
+  ignore_errors: True
+  changed_when: False
+
+- name: Install public key in {{ container.hostname }} on {{ host_proxmox.node }}
+  ansible.builtin.shell: pct exec {{ container.proxmox_container.vmid }} -- sed -i '$ a\{{ pub_key }}' /home/ansible/.ssh/authorized_keys
+  when: ansible_result is failed
+
