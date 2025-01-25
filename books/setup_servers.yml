@@ -3,7 +3,7 @@
 - hosts: homelab:&proxmox
   vars:
     general:
-      pubkey: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_ed25519.pub') }}"
+      pubkey: "{{ ssh_pub_keys[0] }}"
       gateway: "{{ gateway_ip }}"
       domain: "{{ domain_name }}"
       pub_keys: "{{ ssh_pub_keys }}"
