@@ -15,6 +15,8 @@
     name:
     - semaphore
     - git
+    - ansible-collection-community-general
+    - python3-jmespath
 
 - name: Add semaphoreui-alt.service 
   ansible.builtin.copy:
@@ -74,7 +76,7 @@
       file:
         path: "/opt/semaphore.stdin"
         state: absent
-  when: "'stat' in config_file and config_file.stat.exists"
+  when: "'stat' in config_file and not config_file.stat.exists"
 
 - name: Start semaphoreui service
   service:
