@@ -1,0 +1,11 @@
+[Unit]
+Description=Starbound
+After=syslog.target network.target
+
+[Service]
+User=starbound
+Type=simple
+ExecStart=/start.sh
+
+[Install]
+WantedBy=multi-user.target

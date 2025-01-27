@@ -1,0 +1,159 @@
+- name: Importing (free) key
+  ansible.builtin.rpm_key:
+    state: present
+    key: https://rpmfusion.org/keys?action=AttachFile&do=get&target=RPM-GPG-KEY-rpmfusion-free-fedora-2020
+
+- name: Importing (non-free) key
+  ansible.builtin.rpm_key:
+    state: present
+    key: https://rpmfusion.org/keys?action=AttachFile&do=get&target=RPM-GPG-KEY-rpmfusion-nonfree-fedora-2020
+
+- name: Enable the RPM Fusion repository
+  dnf:
+    name: 
+      - "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ansible_distribution_major_version}}.noarch.rpm"
+      - "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ansible_distribution_major_version}}.noarch.rpm"
+    state: present
+
+- name: Install SteamCMD dependencies
+  dnf:
+    name:
+      - steam
+      - python3-pexpect
+    state: latest
+
+- name: Ensure group "starbound" exists
+  ansible.builtin.group:
+    name: starbound
+    gid: 800
+    system: true
+    state: present
+
+- name: Create a user 'starbound' with a home directory
+  ansible.builtin.user:
+    name: starbound
+    group: starbound
+    uid: 800
+    shell: /bin/bash
+    system: true
+    create_home: true
+
+- name: Create target path
+  file:
+    path: "/steamcmd"
+    state: directory
+
+- name: Check if SteamCMD exists
+  stat:
+    path: '/steamcmd/steamcmd.sh'
+  register: steamcmd_file
+  ignore_errors: True
+
+- name: Install SteamCMD
+  unarchive:
+    src: "https://media.steampowered.com/installer/steamcmd_linux.tar.gz"
+    dest: "/steamcmd"
+    remote_src: yes
+  when: "'stat' in steamcmd_file and not steamcmd_file.stat.exists"
+
+- name: Add starbound.service
+  ansible.builtin.copy:
+    src: starbound.service
+    dest: "/etc/systemd/system/starbound.service"
+  notify:
+    - 'starbound : Restart starbound service'
+
+- name: Add start.sh
+  ansible.builtin.copy:
+    src: start.sh
+    dest: "/start.sh"
+    owner: starbound
+    group: starbound
+    mode: 0755
+
+- name: Add check_update.sh
+  ansible.builtin.copy:
+    src: check_update.sh
+    dest: "/check_update.sh"
+    mode: 0755
+
+- name: Add update.sh
+  ansible.builtin.copy:
+    src: update.sh
+    dest: "/update.sh"
+    mode: 0755
+
+- name: game data path must exist
+  file:
+    path: "/starbound"
+    state: directory
+    owner: starbound
+    group: starbound
+
+- name: check game data path must exist
+  file:
+    path: "/check"
+    state: directory
+
+- name: run check process
+  ansible.builtin.expect:
+    command: /check_update.sh {{ steam.username }}
+    timeout: null
+    responses:
+      "password:":
+        - "EXIT!"
+  changed_when: false
+  register: check_output
+
+- name: see if there was any change
+  set_fact:
+    check_updated: true
+  when: "'Update state (0x101)' in item"
+  loop: "{{ check_output.stdout_lines }}"
+
+- name: update
+  block:
+    - name: Set /starbound to root
+      file: 
+        dest: /starbound
+        owner: root
+        group: root
+        recurse: yes
+    - name: run update process
+      ansible.builtin.expect:
+        command: /update.sh {{ steam.username }}
+        timeout: null
+        responses:
+          "password:":
+            - "EXIT!"
+      notify:
+        - 'starbound : Restart starbound service'
+    - name: Set /starbound back to starbound root
+      file: 
+        dest: /starbound
+        owner: starbound
+        group: starbound
+        recurse: yes
+  when: check_updated is true
+
+- name: Check server settings
+  template:
+    src: starbound_server.config.j2
+    dest: /opt/starbound_server.config
+  register: check_settings
+
+- name: Set server settings
+  template:
+    src: starbound_server.config.j2
+    dest: /starbound/storage/starbound_server.config
+    owner: starbound
+    group: starbound
+  when: check_settings is changed
+  notify:
+    - 'starbound : Restart starbound service'
+
+- name: start game
+  service:
+    name: starbound.service
+    enabled: true
+    state: started

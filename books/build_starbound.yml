@@ -1,0 +1,6 @@
+---
+
+- hosts: role_starbound
+  roles:
+  - role: cockpit
+  - role: starbound

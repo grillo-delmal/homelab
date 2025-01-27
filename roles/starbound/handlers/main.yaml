@@ -1,0 +1,6 @@
+---
+
+- name: Restart starbound service
+  service:
+    name: starbound.service
+    state: restarted
