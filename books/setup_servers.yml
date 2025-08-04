@@ -1,18 +1,12 @@
 ---
 
-- hosts: homelab:&proxmox
+- hosts: homelab:&machines
   vars:
     general:
       pubkey: "{{ ssh_pub_keys[0] }}"
       gateway: "{{ gateway_ip }}"
       domain: "{{ domain_name }}"
       pub_keys: "{{ ssh_pub_keys }}"
-
-    proxmox:
-      user: "root@pam"
-      node: "{{ hostname }}"
-      host: "{{ ansible_host }}"
-      password: "{{ proxmox_server.password }}"
 
     storage_src: |
       {{
@@ -28,12 +22,12 @@
   roles:
   - role: cockpit
   - role: letsencrypt
-  - role: proxmox_server
+  - role: incus
 
   tasks:
     - name: Pepare folders
       ansible.builtin.include_role:
-        name: proxmox_server
+        name: incus
         tasks_from: storage_paths
       loop: "{{ 
         groups['homelab'] |
@@ -46,11 +40,8 @@
 
     - name: Build containers
       ansible.builtin.include_role:
-        name: proxmox_server
+        name: incus
         tasks_from: container
-      vars:
-        host_general: "{{ general }}"
-        host_proxmox: "{{ proxmox }}"
       loop: "{{ 
         groups['homelab'] |
           intersect(groups['containers']) |
@@ -60,8 +51,10 @@
             'selectattr', 'key', 'in', [
               'hostname', 
               'ansible_host', 
+              'visible_host', 
+              'internal_host', 
               'storage_mnt', 
-              'proxmox_container'
+              'incus_config'
             ]
           ) |
           map('items2dict')

@@ -3,29 +3,16 @@
     name:
     - cockpit
     - cockpit-ws
+    - cockpit-ws-selinux
+    - cockpit-system
     - cockpit-bridge
     - cockpit-podman
     state: latest
-  when: ansible_os_family == "RedHat" and not (ansible_distribution_major_version == "7")
-
-- name: Prepare services
-  apt:
-    name:
-    - cockpit
-    - cockpit-ws
-    - cockpit-bridge
-    - cockpit-storaged
-    - cockpit-networkmanager
-  when: ansible_os_family == "Debian"
-
-- name: Allow login
-  ansible.builtin.copy:
-    dest: /etc/cockpit/disallowed-users
-    content: ""
-  register: config_change
+  become: True
 
 - name: Start cockpit
   service:
     name: cockpit.socket
     state: started
     enabled: True
+  become: True

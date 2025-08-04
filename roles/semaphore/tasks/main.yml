@@ -26,28 +26,6 @@
     mode: '0644'
   register: semaphore_service
 
-- name: Just force systemd to reread configs
-  ansible.builtin.systemd_service:
-    daemon_reload: true
-  when: semaphore_service is changed
-
-- name: Ensure group "semaphore" exists
-  ansible.builtin.group:
-    name: semaphore
-    gid: 995
-    system: true
-    state: present
-
-- name: Create a user 'semaphore' with a home directory
-  ansible.builtin.user:
-    name: semaphore
-    group: semaphore
-    uid: 995
-    shell: /bin/bash
-    home: /var/lib/semaphore
-    system: true
-    create_home: true
-
 - name: var folder exists
   file:
     path: "/var/lib/semaphore"

@@ -3,13 +3,14 @@
 - name: Submodule {{ btrfs_storage.path }}{{ storage_data.path }} is created
   community.general.btrfs_subvolume:
     name: '{{ storage_data.path }}'
+    filesystem_device: '{{ btrfs_storage.device }}'
 
 - name: Set propper permissions to {{ btrfs_storage.path }}{{ storage_data.path }}
   ansible.builtin.file:
     path: '{{ btrfs_storage.path }}{{ storage_data.path }}'
     state: directory
-    owner: '{{ 100000 + (storage_data.uid | default(0)) }}'
-    group: '{{ 100000 + (storage_data.gid | default(0)) }}'
+    owner: '{{ (storage_data.uid | default(0)) }}'
+    group: '{{ (storage_data.gid | default(0)) }}'
     mode: '{{ storage_data.mode | default("0775") }}'
 
 - name: Get current qgroup

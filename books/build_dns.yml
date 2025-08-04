@@ -8,7 +8,7 @@
     dns: "{{ dns_config }}"
     servers: |
       {{
-        groups['proxmox'] | 
+        groups['machines'] | 
           map('extract', hostvars) | 
           map('dict2items') | 
           map('selectattr', 'key', 'in', ['ansible_host', 'hostname']) | 

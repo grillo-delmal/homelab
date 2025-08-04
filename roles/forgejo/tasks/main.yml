@@ -1,15 +1,3 @@
-- name: Enable COPR on dnf
-  dnf:
-    name:
-    - dnf
-    - dnf-plugins-core
-
-- name: Enable forgejo from mdwalters/forgejo COPR
-  community.general.copr:
-    host: copr.fedorainfracloud.org
-    state: enabled
-    name: mdwalters/forgejo
-
 - name: Install forgejo and deps
   dnf:
     name:
@@ -18,54 +6,10 @@
     - git-lfs
     - sqlite
 
-- name: hotfix forgejo until patch get's merged
-  block:
-
-    - name: Add forgejo-alt.service 
-      ansible.builtin.copy:
-        src: forgejo-alt.service
-        dest: /usr/lib/systemd/system/forgejo-alt.service
-        force: true
-        mode: '0644'
-      register: forgejo_service
-
-    - name: Just force systemd to reread configs
-      ansible.builtin.systemd_service:
-        daemon_reload: true
-      when: forgejo_service is changed
-
-    - name: Ensure group "git" exists
-      ansible.builtin.group:
-        name: git
-        gid: 995
-        system: true
-        state: present
-
-    - name: Create a user 'git' with a home directory
-      ansible.builtin.user:
-        name: git
-        group: git
-        uid: 995
-        shell: /bin/bash
-        home: /var/lib/forgejo
-        system: true
-        create_home: true
-
-- name: var folder exists
-  file:
-    path: "/var/lib/forgejo"
-    state: directory
-    owner: git
-    group: git
-    mode: '0750'
-
-- name: etc folder exists
-  file:
-    path: "/etc/forgejo"
-    state: directory
-    owner: root
-    group: git
-    mode: '0750'
+- name: Unlock 'forgejo' user
+  ansible.builtin.user:
+    name: forgejo
+    password_lock: false
 
 - name: Add cap_net_bind_service to forgejo
   community.general.capabilities:
@@ -84,18 +28,18 @@
 - name: Upload the test.app.ini file
   template:
     src: app.ini.j2
-    dest: "/etc/forgejo/test.app.ini"
+    dest: "/etc/forgejo/conf/test.app.ini"
     owner: root
-    group: git
+    group: forgejo
     mode: '0640'
   register: ini_process
 
 - name: Upload the app.ini file if test changed
   template:
     src: app.ini.j2
-    dest: "/etc/forgejo/app.ini"
+    dest: "/etc/forgejo/conf/app.ini"
     owner: root
-    group: git
+    group: forgejo
     mode: '0660'
   when: ini_process is changed
   notify:
@@ -103,7 +47,7 @@
 
 - name: Start forgejo service
   service:
-    name: forgejo-alt.service
+    name: forgejo.service
     enabled: true
     state: started
 
@@ -122,9 +66,9 @@
 
 - name: Check users
   shell: 
-    "sudo -u git forgejo \
+    "sudo -u forgejo forgejo \
       -w /var/lib/forgejo \
-      -c /etc/forgejo/app.ini \
+      -c /etc/forgejo/conf/app.ini \
       admin user list --admin | \
     awk '{print $2}' | \
     grep -w {{ forgejo_config.admin.username }}"
@@ -134,9 +78,9 @@
 
 - name: Create user if it doesn't exist
   shell:
-    "sudo -u git forgejo \
+    "sudo -u forgejo forgejo \
       -w /var/lib/forgejo \
-      -c /etc/forgejo/app.ini \
+      -c /etc/forgejo/conf/app.ini \
       admin user create \
         --username {{ forgejo_config.admin.username }} \
         --password {{ forgejo_config.admin.password }} \
@@ -147,6 +91,6 @@
 
 - name: Change permissions
   file:
-    path: "/etc/forgejo/app.ini"
+    path: "/etc/forgejo/conf/app.ini"
     state: file
     mode: "0640"

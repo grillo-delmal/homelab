@@ -1,0 +1,32 @@
+- name: Get info from {{ container.hostname }}
+  command: incus info {{ container.hostname }}
+  changed_when: False
+  failed_when: False
+  register: incus_info
+
+- name: Container already exists
+  block:
+    # TODO: Check if the container needs to be updated or rebuilt
+    - debug:
+        msg: "YAY!!!"
+  when: incus_info.rc == 0
+
+- name: Container needs to be created
+  block:
+
+    - name: Copy input template
+      template:
+        src: config.stdin.j2
+        dest: /tmp/config.stdin
+
+    - name: Run setup
+      shell: incus launch images:fedora/42/cloud {{ container.hostname }} < /tmp/config.stdin
+
+    - name: Wait 300 seconds for port 22 to become open and contain "OpenSSH"
+      ansible.builtin.wait_for:
+        port: 22
+        host: '{{ container.ansible_host }}'
+        search_regex: OpenSSH
+        delay: 10
+        timeout: 300
+  when: incus_info.rc != 0

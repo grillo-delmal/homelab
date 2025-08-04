@@ -1,0 +1,163 @@
+---
+- name: Incus dependencies
+  dnf:
+    name: 
+      - incus
+      - dpkg
+    state: present
+
+# Make sure webui is up
+- name: Check if the path exists
+  stat:
+    path: '/opt/incus/ui/index.html'
+  register: incus_webui_installed
+
+- name: Download incus-webui
+  ansible.builtin.get_url:
+    url: "https://pkgs.zabbly.com/incus/stable/pool/main/i/incus/incus-ui-canonical_6.13-ubuntu24.04-202506210432_arm64.deb"
+    dest: "/opt/incus-ui-canonical.deb"
+  when: not incus_webui_installed.stat.exists
+
+- name: Extract the deb into a folder
+  ansible.builtin.command: 'dpkg -x /opt/incus-ui-canonical.deb /opt/incus-ui/'
+  when: not incus_webui_installed.stat.exists
+
+- name: Move ui to propper path
+  ansible.builtin.copy:
+    remote_src: True
+    src: /opt/incus-ui/opt/incus
+    dest: /opt
+  when: not incus_webui_installed.stat.exists
+
+- name: Create path
+  ansible.builtin.file:
+    path: "/etc/systemd/system/incus.service.d/"
+    state: directory
+    mode: '0755'
+  when: not incus_webui_installed.stat.exists
+
+- name: Setup service to use URL
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/incus.service.d/10-env.conf
+    content: |
+      [Service]
+      Environment=INCUS_UI=/opt/incus/ui/
+    mode: '0644'
+  when: not incus_webui_installed.stat.exists
+
+- name: Restart service
+  ansible.builtin.systemd_service:
+    state: restarted
+    daemon_reload: True
+    name: incus
+  when: not incus_webui_installed.stat.exists
+
+- name: Set config
+  ansible.builtin.command: 'incus config set core.https_address :8443'
+  when: not incus_webui_installed.stat.exists
+
+- name: Permit traffic in default zone on port 8443/tcp
+  ansible.posix.firewalld:
+    port: 8443/tcp
+    state: enabled
+    permanent: true
+    immediate: true
+    offline: true
+
+- name: Set incus config
+  ansible.builtin.command: 'incus config set core.https_address :8443'
+  when: not incus_webui_installed.stat.exists
+
+# Add ssl cert if exists
+- name: Check src chain
+  stat:
+    path: "/etc/letsencrypt/certs/fullchain_{{ letsencrypt_domain_name }}.pem"
+  register: src_chain_status
+
+#- name: Check dest chain
+#  stat:
+#    path: '/etc/pve/nodes/{{ hostname }}/pveproxy-ssl.pem'
+#  register: dest_chain_status
+
+# FIXME
+#- name: Set new cert chain
+#  shell: cp -f "/etc/letsencrypt/certs/fullchain_{{ letsencrypt_domain_name }}.pem" '/etc/pve/nodes/{{ hostname }}/pveproxy-ssl.pem'
+#  when: src_chain_status.stat.exists and ( (not dest_chain_status.stat.exists) or src_chain_status.stat.checksum != dest_chain_status.stat.checksum)
+#  register: new_chain
+
+- name: Check src key
+  stat:
+    path: "/etc/letsencrypt/keys/{{ letsencrypt_domain_name }}.key"
+  register: src_key_status
+
+#- name: Check dest key
+#  stat:
+#    path: '/etc/pve/nodes/{{ hostname }}/pveproxy-ssl.key'
+#  register: dest_key_status
+
+#- name: Set new cert key
+#  shell: cp -f "/etc/letsencrypt/keys/{{ letsencrypt_domain_name }}.key" '/etc/pve/nodes/{{ hostname }}/pveproxy-ssl.key'
+#  when: src_key_status.stat.exists and ( (not dest_key_status.stat.exists) or src_key_status.stat.checksum != dest_key_status.stat.checksum)
+#  register: new_key
+
+#- name: Reset if changed
+#  ansible.builtin.systemd_service:
+#    state: restarted
+#    daemon_reload: True
+#    name: pveproxy
+#  when: new_chain is changed or new_key is changed
+
+# Enable/start incus
+- name: Start incus
+  ansible.builtin.systemd_service:
+    state: started
+    enabled: True
+    name: incus
+
+- name: Upload container init script
+  ansible.builtin.copy:
+    dest: /opt/setup.sh
+    content: |
+      #!/bin/bash
+      dnf -y install openssh-server sudo python3 python3-libdnf5
+      systemctl enable sshd
+      useradd -m -s /bin/bash ansible
+      usermod -a -G wheel ansible
+      mkdir -p /home/ansible/.ssh/
+      cp /root/.ssh/authorized_keys /home/ansible/.ssh/
+      chown -R ansible:ansible /home/ansible/.ssh/authorized_keys 
+      systemctl start sshd
+    mode: '0755'
+
+#TODO: Configure Incus
+
+# BTRFS
+
+- name: Device is mounted with the correct options
+  ansible.posix.mount:
+    path: '{{ btrfs_storage.path }}'
+    src: '{{ btrfs_storage.device }}'
+    fstype: btrfs
+    opts: rw,degraded
+    state: mounted
+  register: mount_options
+  ignore_errors: true
+
+- name: Remount now if options are not correct
+  ansible.posix.mount:
+    path: '{{ btrfs_storage.path }}'
+    src: '{{ btrfs_storage.device }}'
+    fstype: btrfs
+    opts: rw,degraded
+    state: remounted
+  when: 'mount_options is changed or mount_options is failed'
+
+- name: Make sure quotas are enabled
+  shell: btrfs quota enable {{ btrfs_storage.path }}
+  changed_when: False
+
+- name: Prepare all subvolumes
+  ansible.builtin.include_tasks:  btrfs_subvolume.yml
+  vars:
+    storage_data: '{{ item }}'
+  loop: '{{ storage_src }}'
