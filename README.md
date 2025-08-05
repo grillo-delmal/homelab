@@ -2,9 +2,7 @@
 
 These playbooks are built to provision and maintain my homelab infrastructure :)
 
-This assumes that the servers have proxmox installed and that they can be managed using ansible.
-
-I'm also have an updated version of `community-general` collection for the updated proxmox tasks.
+This assumes that the server has Fedora installed and that it can be managed using ansible.
 
 # Playbooks
 
@@ -26,15 +24,15 @@ ansible-playbook books/upgrade_all.yml
 
 ## Provision certs and containers to proxmox host
 
-This playbook will provision / update the container infrastructure using the information collected from the inventory.
+This playbook will provision / update the container infrastructure in the main server using the information collected from the inventory.
 
 ```sh
-ansible-playbook books/setup_servers.yml
+ansible-playbook books/setup_homelab.yml
 ```
 
 ## Rebuild / update specific app
 
-If called directly, the playbooks will install / updates the referenced app in the targets marked by the inventory.
+If called directly, the playbooks will install / update the referenced app in the targets marked by the inventory.
 
 ```sh
 ansible-playbook books/build_{APPNAME}.yml
@@ -63,8 +61,10 @@ Last update 2025/01/20
 ### inventory/main.yml
 
 ```yml
-# Servers and container list
-all:
+# Group server and containers here
+# As for now it assumes that all the containers are in homelab
+# which has 1 server and multiple containers
+homelab:
   hosts:
     <server_0>:
     <container_0>:
@@ -73,38 +73,12 @@ all:
     <container_3>:
     <container_4>:
 
-# Group server and containers here
-# As for now it assumes that all the containers are in homelab
-# which has 1 server and multiple containers
-hardware:
-  children:
-    homelab:
-      hosts:
-        <server_0>:
-        <container_0>:
-        <container_1>:
-        <container_2>:
-        <container_3>:
-        <container_4>:
-    rpi:
-      hosts:
-        <server_1>:
-    router:
-      hosts:
-        <server_2>:
-## At some point in the future
-#    another_homelab:
-#      hosts:
-#        <server_3>:
-#        <container_5>:
-#        <container_6>:
-
-
-# Categorize between proxmox hosts and containers
-# Only the one in homelab will be recognized as the parent of the containers
+# Categorize between machine hosts and containers
+# The containers will get created on all the hosts that intersect
+# between machines and homelab, so make sure that its only one
 type:
   children:
-    proxmox:
+    machines:
       hosts:
         <server_0>:
     containers:
@@ -148,14 +122,19 @@ domain_name: <domain>
 base_domain_name: <base_domain>
 cloudflare_token: <token>
 
+# Add the ssh pubkeys that will be used to access the server here!
+ssh_pub_keys:
+- <pubkey 1>
+- <pubkey 2>
+
 letsencrypt_email: <mail>
 letsencrypt_challenge_type: dns_01
 ```
 
-### inventory/group_vars/homelab/servers.yml
+### inventory/group_vars/homelab/machines.yml
 
 ```yml
-# Required because proxmox permission system is not good enough
+# Required for now
 ansible_user: root
 ```
 
@@ -168,8 +147,7 @@ ansible_user: root
 ansible_host: <ip_addr>
 ns_name: root
 
-proxmox_server:
-  password: 12345
+letsencrypt_domain_name: "{{ hostname }}.{{ domain_name }}"
 
 btrfs_storage:
   path: /bindmounts
@@ -189,6 +167,20 @@ proxmox_container:
   cores: 1
   memory: 512
   unprivileged: False
+
+# Container
+incus_config:
+  disk: '8GiB'
+  cores: 2
+  memory: 2GiB
+  privileged: False
+  nesting: True
+
+# External storage
+storage_mnt:
+  - path: <path inside btrfs_storage>
+    target: <path in target>
+    size: <capped by btrfs subvolume system (optional)>
 
 # NS Role
 dns_config:
