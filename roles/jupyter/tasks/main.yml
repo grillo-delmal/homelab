@@ -1,0 +1,76 @@
+---
+
+- name: Prepare services
+  dnf:
+    name:
+    - podman
+    - git
+    state: latest
+
+- name: Ensure group "jupyter" exists
+  ansible.builtin.group:
+    name: jupyter
+    gid: 800
+    system: true
+    state: present
+
+- name: Create a user 'jupyter' with a home directory
+  ansible.builtin.user:
+    name: jupyter
+    group: jupyter
+    uid: 800
+    shell: /bin/bash
+    system: true
+    create_home: true
+
+- name: Download code
+  ansible.builtin.git:
+    repo: 'https://github.com/dherrerace/jupyter-local.git'
+    dest: /opt/jupyter-local
+    version: main
+
+- name: Create directory
+  ansible.builtin.file:
+    path: /data/.local/share/jupyter/runtime/
+    state: directory
+    owner: jupyter
+    group: jupyter
+    mode: '0755'
+
+- name: Make sure the data has the correct permissions
+  ansible.builtin.file:
+    path: /data/
+    owner: jupyter
+    group: jupyter
+    recurse: true
+
+- name: Build Image
+  containers.podman.podman_image:
+    name: localhost/jupyter-local-image
+    path: /opt/jupyter-local
+  register: image_built
+
+- name: Stop jupyter if image built
+  containers.podman.podman_container:
+    name: jupyter-local
+    state: absent
+  when: image_built is changed
+
+- name: Run jupyter
+  containers.podman.podman_container:
+    name: jupyter-local
+    image: localhost/jupyter-local-image
+    volumes:
+      - "/data:/jupyter_stuff:rw,Z"
+    workdir: /jupyter_stuff
+    ports: 
+      - 8888:8888
+    user: jupyter
+    hostuser: jupyter
+    command: python3 -m jupyterlab
+        --ServerApp.ip=0.0.0.0
+        --ServerApp.port=8888
+        --LabApp.collaborative=True
+        --IdentityProvider.token={{ jupyter_token }}
+        --no-browser
+    state: started

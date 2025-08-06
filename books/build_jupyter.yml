@@ -1,0 +1,6 @@
+---
+
+- hosts: role_jupyter
+  roles:
+  - role: cockpit
+  - role: jupyter

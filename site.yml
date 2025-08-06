@@ -11,3 +11,4 @@
 - import_playbook: books/build_luanti.yml
 - import_playbook: books/build_veloren.yml
 - import_playbook: books/build_starbound.yml
+- import_playbook: books/build_jupyter.yml
