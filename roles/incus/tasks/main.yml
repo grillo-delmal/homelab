@@ -131,6 +131,35 @@
 
 #TODO: Configure Incus
 
+# Cockpit host
+- name: Generate an OpenSSH keypair with the default values (4096 bits, rsa)
+  openssh_keypair:
+    path: /root/.ssh/id_rsa
+    owner: root
+    group: root
+
+- name: Fix owner of the generated pub key
+  file:
+    path: /root/.ssh/id_rsa.pub
+    owner: root
+    group: root
+
+- command: "cat /root/.ssh/id_rsa.pub"
+  changed_when: False
+  failed_when: False
+  register: pubkey_result
+
+- name: Set master pubkey as fact
+  ansible.builtin.set_fact:
+    master_pubkey: "{{ pubkey_result.stdout }}"
+
+- name: Set as a Cockpit Hub
+  copy:
+    dest: /etc/cockpit/cockpit.conf
+    content: |
+      [WebService]
+      AllowMultiHost=true
+
 # BTRFS
 
 - name: Device is mounted with the correct options

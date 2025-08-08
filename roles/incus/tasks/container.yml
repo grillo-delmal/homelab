@@ -4,14 +4,14 @@
   failed_when: False
   register: incus_info
 
-- name: Container already exists
+- name: Container {{ container.hostname }} already exists
   block:
     # TODO: Check if the container needs to be updated or rebuilt
     - debug:
         msg: "YAY!!!"
   when: incus_info.rc == 0
 
-- name: Container needs to be created
+- name: Container {{ container.hostname }} needs to be created
   block:
 
     - name: Copy input template
@@ -19,7 +19,7 @@
         src: config.stdin.j2
         dest: /tmp/config.stdin
 
-    - name: Run setup
+    - name: Run setup on {{ container.hostname }}
       shell: incus launch images:fedora/42/cloud {{ container.hostname }} < /tmp/config.stdin
 
     - name: Wait 300 seconds for port 22 to become open and contain "OpenSSH"
@@ -30,3 +30,26 @@
         delay: 10
         timeout: 300
   when: incus_info.rc != 0
+
+- name: Check if {{ container.hostname }} is a trusted machine
+  command: ssh-keygen -F {{ container.ansible_host }} -f /etc/ssh/ssh_known_hosts
+  changed_when: False
+  failed_when: False
+  register: trust_process
+
+- name: Add {{ container.hostname }} to trusted list
+  shell: ssh-keyscan {{ container.ansible_host }} >> /etc/ssh/ssh_known_hosts
+  when: trust_process.rc != 0
+
+- name: Add {{ container.hostname }} to cockpit machines
+  copy:
+    dest: /etc/cockpit/machines.d/10-{{ container.hostname }}.json
+    content: |
+      {
+        "{{ container.ansible_host }}": {
+          "visible": true,
+          "address": "{{ container.ansible_host }}",
+          "user": "root"
+        }
+      }
+  when: trust_process.rc != 0

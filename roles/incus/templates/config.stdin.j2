@@ -54,6 +54,7 @@ config:
 {% for key in ssh_pub_keys %}
           {{ key }}
 {% endfor %}
+          {{ master_pubkey }}
       - path: /root/.ssh/authorized_keys
         owner: root:root
         permissions: 0o600
@@ -62,6 +63,7 @@ config:
 {% for key in ssh_pub_keys %}
           {{ key }}
 {% endfor %}
+          {{ master_pubkey }}
 
 devices:
   root:
