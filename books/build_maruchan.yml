@@ -2,7 +2,6 @@
 
 - hosts: role_maruchan
   roles:
-  - role: cockpit
   - role: maruchan
     config: "{{ maruchan_config }}"
     ai_url: "http://{{ 

@@ -2,6 +2,5 @@
 
 - hosts: role_ai
   roles:
-  - role: cockpit
   - role: ramalama
     model: "{{ ai_model }}"

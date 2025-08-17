@@ -1,6 +1,7 @@
 ---
 # Private apps
 - import_playbook: books/setup_homelab.yml
+- import_playbook: books/setup_containers.yml
 - import_playbook: books/build_dns.yml
 - import_playbook: books/build_traefik.yml
 - import_playbook: books/build_forgejo.yml

@@ -2,5 +2,4 @@
 
 - hosts: role_forgejo
   roles:
-  - role: cockpit
   - role: forgejo

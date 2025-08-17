@@ -2,7 +2,6 @@
 
 - hosts: role_traefik
   roles:
-  - role: cockpit
   - role: traefik
     targets: |
       {{

@@ -2,5 +2,4 @@
 
 - hosts: role_luanti
   roles:
-  - role: cockpit
   - role: luanti
