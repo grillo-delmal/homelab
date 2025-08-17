@@ -17,6 +17,22 @@
     capability: cap_net_bind_service=ep
     state: present
 
+- name: Permit traffic
+  ansible.posix.firewalld:
+    zone: external
+    service: "ssh"
+    state: enabled
+    permanent: true
+    immediate: true
+    offline: true
+
+- name: Make sure permissions are fine
+  file: 
+    dest: /var/lib/forgejo
+    owner: forgejo
+    group: forgejo
+    recurse: yes
+
 - name: Upload sshd conf
   ansible.builtin.copy:
     src: 60-forgejo.conf

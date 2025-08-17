@@ -6,6 +6,15 @@
     - bind
     state: present
 
+- name: Permit traffic
+  ansible.posix.firewalld:
+    zone: external
+    service: dns
+    state: enabled
+    permanent: true
+    immediate: true
+    offline: true
+
 - name: Configure bind
   template:
     src: named.conf.j2

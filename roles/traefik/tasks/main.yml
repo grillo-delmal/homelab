@@ -41,6 +41,15 @@
   when: "'traefik_config' not in item"
   loop: '{{ targets }}'
 
+- name: Permit traffic in default zone on port {{ forgejo_config.app.server.http_port | default(3000) }}/tcp
+  ansible.posix.firewalld:
+    zone: external
+    service: "https"
+    state: enabled
+    permanent: true
+    immediate: true
+    offline: true
+
 - name: Run traefik
   containers.podman.podman_container:
     name: traefik
