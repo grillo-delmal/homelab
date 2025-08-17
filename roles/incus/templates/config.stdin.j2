@@ -14,57 +14,6 @@ config:
 {% if container.incus_config.nesting is defined %}
   security.nesting: '{{ container.incus_config.nesting }}'
 {% endif %}
-  cloud-init.network-config: |+
-    version: 2
-    ethernets:
-      eth0:
-        wakeonlan: true
-        dhcp4: false
-        addresses:
-          - {{ container.visible_host }}
-        gateway4: {{ gateway_ip }}
-        nameservers:
-          addresses: [{{ gateway_ip }}]
-{% if container.internal_host is defined %}
-      eth1:
-        wakeonlan: true
-        dhcp4: false
-        addresses:
-          - {{ container.internal_host }}
-{% endif %}
-  cloud-init.vendor-data: |+
-    #cloud-config
-    packages:
-      - openssh-server
-    runcmd:
-      - systemctl enable sshd
-      - systemctl start sshd
-    users:
-      - name: ansible
-        gecos: Ansible User
-        shell: /bin/bash
-        groups: users,admin,wheel,lxd
-        sudo: "ALL=(ALL) NOPASSWD:ALL"
-    write_files:
-      - path: /home/ansible/.ssh/authorized_keys
-        owner: ansible:ansible
-        permissions: 0o600
-        defer: true
-        content: |
-{% for key in ssh_pub_keys %}
-          {{ key }}
-{% endfor %}
-          {{ master_pubkey }}
-      - path: /root/.ssh/authorized_keys
-        owner: root:root
-        permissions: 0o600
-        defer: true
-        content: |
-{% for key in ssh_pub_keys %}
-          {{ key }}
-{% endfor %}
-          {{ master_pubkey }}
-
 devices:
   root:
     type: disk
@@ -76,12 +25,10 @@ devices:
     nictype: bridged
     parent: br0
     type: nic
-{% if container.internal_host is defined %}
   eno1:
     name: eth1
     network: internal
     type: nic
-{% endif %}
 {% if container.storage_mnt is defined %}
 {% for storage in container.storage_mnt %}
   disk-device-{{ loop.index0 }}:

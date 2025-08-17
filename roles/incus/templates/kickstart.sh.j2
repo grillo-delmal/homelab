@@ -1,0 +1,47 @@
+#!/usr/bin/bash
+
+useradd ansible -d /home/ansible -G users,wheel -m -N
+echo 'ansible ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/ansible
+
+chown -R root:root /root/.ssh/
+chown -R ansible:ansible /home/ansible/.ssh/
+chmod -R 600 /root/.ssh/ /home/ansible/.ssh/
+
+dnf -y install openssh-server firewalld NetworkManager
+
+systemctl daemon-reload
+systemctl set-default multi-user.target
+systemctl enable firewalld sshd NetworkManager
+systemctl start firewalld sshd NetworkManager
+
+firewall-cmd --zone=trusted --add-service=ssh
+firewall-cmd --zone=external --remove-service=ssh
+firewall-cmd --runtime-to-permanent
+
+nmcli --terse connection show | cut -d : -f 1 | while read name
+do
+    nmcli connection delete "$name"
+done
+
+nmcli connection add \
+    type ethernet \
+    con-name eth0 \
+    ifname eth0 \
+    ipv4.addresses {{ container.visible_host }} \
+    ipv4.gateway {{ gateway_ip }} \
+    ipv4.dns {{ gateway_ip }} \
+    ipv4.method manual \
+    ipv6.method disabled \
+    connection.autoconnect yes \
+    connection.zone external
+
+nmcli connection add \
+    type ethernet \
+    con-name eth1 \
+    ifname eth1 \
+    ipv4.addresses {{ container.internal_host }} \
+    ipv4.method manual \
+    ipv6.method disabled \
+    connection.autoconnect yes \
+    connection.zone trusted
+
