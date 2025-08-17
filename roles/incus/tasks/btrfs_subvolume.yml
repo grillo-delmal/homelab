@@ -5,14 +5,6 @@
     name: '{{ storage_data.path }}'
     filesystem_device: '{{ btrfs_storage.device }}'
 
-- name: Set propper permissions to {{ btrfs_storage.path }}{{ storage_data.path }}
-  ansible.builtin.file:
-    path: '{{ btrfs_storage.path }}{{ storage_data.path }}'
-    state: directory
-    owner: '{{ (storage_data.uid | default(0)) }}'
-    group: '{{ (storage_data.gid | default(0)) }}'
-    mode: '{{ storage_data.mode | default("0775") }}'
-
 - name: Get current qgroup
   shell: "btrfs qgroup show -reF --iec {{ btrfs_storage.path }}{{ storage_data.path }} | sed -n 3p | awk '{print $1}'"
   register: qgroupid
