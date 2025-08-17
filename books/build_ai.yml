@@ -3,4 +3,3 @@
 - hosts: role_ai
   roles:
   - role: ramalama
-    model: "{{ ai_model }}"
