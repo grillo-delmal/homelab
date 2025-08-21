@@ -38,6 +38,18 @@
 - name: Container ct-{{ container.hostname }} needs to be created
   block:
 
+    - name: Make sure there is no trusted host with the same ip
+      lineinfile:
+        path: /etc/ssh/ssh_known_hosts
+        state: absent
+        regexp: '^(# )?{{ container.ansible_host | replace(".", "\.") }}\D'
+
+    - name: Make sure there is no trusted host with the same ip
+      lineinfile:
+        path: /root/.ssh/known_hosts
+        state: absent
+        regexp: '^(# )?{{ container.ansible_host | replace(".", "\.") }}\D'
+
     - name: Run setup on ct-{{ container.hostname }}
       shell: |
         incus create images:fedora/42/default ct-{{ container.hostname }} < /tmp/config.stdin

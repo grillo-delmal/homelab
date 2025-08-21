@@ -9,14 +9,12 @@ chmod -R 600 /root/.ssh/ /home/ansible/.ssh/
 
 dnf -y install openssh-server firewalld NetworkManager
 
+rm -f /etc/systemd/network/eth0.network
+
 systemctl daemon-reload
 systemctl set-default multi-user.target
 systemctl enable firewalld sshd NetworkManager
 systemctl start firewalld sshd NetworkManager
-
-firewall-cmd --zone=trusted --add-service=ssh
-firewall-cmd --zone=external --remove-service=ssh
-firewall-cmd --runtime-to-permanent
 
 nmcli --terse connection show | cut -d : -f 1 | while read name
 do
@@ -45,3 +43,8 @@ nmcli connection add \
     connection.autoconnect yes \
     connection.zone trusted
 
+firewall-cmd --set-default-zone drop
+firewall-cmd --zone=trusted --add-service=ssh
+firewall-cmd --zone=external --remove-service=ssh
+
+firewall-cmd --runtime-to-permanent
