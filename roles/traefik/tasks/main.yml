@@ -41,7 +41,7 @@
   when: "'traefik_config' not in item"
   loop: '{{ targets }}'
 
-- name: Permit traffic in default zone on port {{ forgejo_config.app.server.http_port | default(3000) }}/tcp
+- name: Permit traffic through https
   ansible.posix.firewalld:
     zone: external
     service: "https"
