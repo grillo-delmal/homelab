@@ -6,6 +6,7 @@
 - import_playbook: books/build_traefik.yml
 - import_playbook: books/build_forgejo.yml
 - import_playbook: books/build_semaphore.yml
+- import_playbook: books/build_wgportal.yml
 # Public apps
 - import_playbook: books/build_ai.yml
 - import_playbook: books/build_maruchan.yml

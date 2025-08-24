@@ -1,0 +1,5 @@
+---
+
+- hosts: role_wgportal
+  roles:
+  - role: wgportal

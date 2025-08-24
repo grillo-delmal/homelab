@@ -1,0 +1,25 @@
+core:
+  admin_user: {{ wgportal_config.admin_user }}
+  admin_password: {{ wgportal_config.admin_password }}
+  create_default_peer: false
+  self_provisioning_allowed: false
+
+web:
+  site_title: {{ wgportal_config.site_title }}
+  site_company_name: {{ wgportal_config.site_company_name }}
+  listening_address: :8080
+  external_url: {{ wgportal_config.external_url }}
+  request_logging: true
+
+advanced:
+  log_level: trace
+  log_pretty: true
+  log_json: false
+  start_listen_port: 51820
+  expiry_check_interval: 5m
+
+database:
+  debug: true
+  type: sqlite
+  dsn: data/sqlite.db
+  encryption_passphrase: {{ wgportal_config.encryption_passphrase }}

@@ -1,0 +1,6 @@
+---
+
+- name: Restart wgportal service
+  service:
+    name: wg-portal.service
+    state: restarted
