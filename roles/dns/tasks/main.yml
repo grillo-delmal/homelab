@@ -25,7 +25,7 @@
     src: main.zone.j2
     dest: /var/raw.main.zone
   vars:
-    serial: '0'
+    serial_num: '0'
   register: raw_zone
 
 - name: Create real zone
@@ -33,7 +33,7 @@
     src: main.zone.j2
     dest: /var/named/{{ domain }}.zone
   vars:
-    serial: '{{ ansible_date_time.year }}{{ "%02d" % ( ansible_date_time.month | int ) }}{{ "%02d" % ( ansible_date_time.day | int ) }}{{ "%02d" % ( ansible_date_time.hour | int ) }}'
+    serial_num: '{{ ansible_date_time.year }}{{ "%02d" % ( ansible_date_time.month | int ) }}{{ "%02d" % ( ansible_date_time.day | int ) }}{{ "%02d" % ( ansible_date_time.hour | int ) }}'
   when: raw_zone is changed
   notify:
     - 'dns : Restart named service'
