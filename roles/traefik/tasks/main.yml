@@ -41,22 +41,13 @@
   when: "'traefik_config' not in item"
   loop: '{{ targets }}'
 
-- name: Permit traffic through https
-  ansible.posix.firewalld:
-    zone: external
-    service: "https"
-    state: enabled
-    permanent: true
-    immediate: true
-    offline: true
-
 - name: Run traefik
   containers.podman.podman_container:
     name: traefik
     image: docker.io/library/traefik:latest
     ports:
-      - "80:80"
-      - "443:443"
+      - "{{ (visible_host | split('/'))[0] }}:80:80"
+      - "{{ (visible_host | split('/'))[0] }}:443:443"
     env:
       CF_API_EMAIL: '{{ letsencrypt_email }}'
       CF_DNS_API_TOKEN: '{{ cloudflare_token }}'

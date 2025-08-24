@@ -1,5 +1,4 @@
-api:
-  dashboard: true
+api: {}
 
 global:
   checkNewVersion: false
@@ -26,9 +25,6 @@ entryPoints:
             sans:
               - "*.{{ domain_name }}"
    
-serversTransport:
-  insecureSkipVerify: true
-
 certificatesResolvers:
   le:
     acme:
@@ -36,7 +32,8 @@ certificatesResolvers:
       storage: acme.json
       dnsChallenge:
         provider: "cloudflare"
-        delayBeforeCheck: 5
+        propagation:
+          delayBeforeChecks: 5
         resolvers:
           - 1.1.1.1:53
           - 8.8.8.8:53

@@ -1,7 +1,7 @@
 http:
   routers:
     dashboard:
-      rule: Host(`traefik.{{ domain_name }}`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))
+      rule: Host(`{{ hostname }}.{{ domain_name }}`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))
       service: api@internal
       middlewares:
       - dashboard_whitelist
