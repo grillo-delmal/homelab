@@ -34,10 +34,26 @@
     group: semaphore
     mode: '0750'
 
+- name: Make sure permissions are fine
+  file: 
+    dest: /var/lib/semaphore
+    owner: semaphore
+    group: semaphore
+    recurse: yes
+
 - name: Check if config.json exists
   stat:
     path: '/var/lib/semaphore'
   register: config_file
+
+- name: Permit traffic through https
+  ansible.posix.firewalld:
+    zone: internal
+    port: "3000/tcp"
+    state: enabled
+    permanent: true
+    immediate: true
+    offline: true
 
 - name: Initialize semaphore
   block:
