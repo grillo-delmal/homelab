@@ -7,12 +7,20 @@ chown -R root:root /root/.ssh/
 chown -R ansible:ansible /home/ansible/.ssh/
 chmod -R 600 /root/.ssh/ /home/ansible/.ssh/
 
-dnf -y install openssh-server firewalld
+dnf -y install \
+    openssh-server \
+    firewalld \
+    cockpit \
+    cockpit-ws \
+    cockpit-ws-selinux \
+    cockpit-system \
+    cockpit-bridge \
+    cockpit-podman
 
 systemctl daemon-reload
 systemctl set-default multi-user.target
-systemctl enable firewalld sshd
-systemctl start firewalld sshd
+systemctl enable firewalld sshd cockpit.socket
+systemctl start firewalld sshd cockpit.socket
 
 firewall-cmd --set-default-zone drop
 firewall-cmd --permanent --zone external --remove-service ssh

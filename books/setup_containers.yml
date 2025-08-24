@@ -1,3 +1,134 @@
 - hosts: homelab:&containers
-  roles:
-  - role: cockpit
+
+  tasks:
+    # Setup Firewall
+    - name: Get current firewall rules
+      ansible.posix.firewalld_info:
+        zones:
+          - trusted
+          - external
+      register: current_rules
+
+    - name: Internal rules
+      block:
+
+        - name: Remove different trusted rules
+          ansible.posix.firewalld:
+            rich_rule: "{{ item }}"
+            zone: trusted
+            permanent: true
+            immediate: true
+            offline: true
+            state: disabled
+          loop: "{{ current_rules.firewalld_info.zones['trusted'].rich_rules }}"
+          when: (
+            firewalld_rules is not defined or 
+            firewalld_rules.internal is not defined or
+            item not in firewalld_rules.internal)
+
+        - name: Add trusted firewall rules
+          ansible.posix.firewalld:
+            rich_rule: "{{ item }}"
+            zone: trusted
+            permanent: true
+            immediate: true
+            offline: true
+            state: enabled
+          loop: "{{ firewalld_rules.internal }}"
+          when: firewalld_rules is defined and firewalld_rules.trusted is defined
+
+    - name: External rules
+      block:
+
+        - name: Remove different external rules
+          ansible.posix.firewalld:
+            rich_rule: "{{ item }}"
+            zone: external
+            permanent: true
+            immediate: true
+            offline: true
+            state: disabled
+          loop: "{{ current_rules.firewalld_info.zones['external'].rich_rules }}"
+          when: (
+            firewalld_rules is not defined or 
+            firewalld_rules.external is not defined or
+            item not in firewalld_rules.external)
+
+        - name: Add external firewall rules
+          ansible.posix.firewalld:
+            rich_rule: "{{ item }}"
+            zone: external
+            permanent: true
+            immediate: true
+            offline: true
+            state: enabled
+          loop: "{{ firewalld_rules.external }}"
+          when: firewalld_rules is defined and firewalld_rules.external is defined
+
+    - name: Outgoing rules
+      block:
+
+        - name: Check if outgoing-rules policy exists
+          shell: |
+            firewall-cmd --permanent --policy outgoing-rules --list-rich-rules
+          failed_when: false
+          changed_when: false
+          register: current_rules
+
+        - name: Create policy for outgoing traffic
+          shell: |
+            firewall-cmd --permanent --new-policy outgoing-rules
+            firewall-cmd --permanent --policy outgoing-rules --add-ingress-zone external
+            firewall-cmd --permanent --policy outgoing-rules --add-egress-zone ANY
+            firewall-cmd --permanent --policy outgoing-rules --set-target ACCEPT
+          when: (
+            firewalld_rules is defined and 
+            firewalld_rules.outgoing is defined and 
+            (firewalld_rules.outgoing | length) > 0 and
+            current_rules.rc != 0)
+          register: created_policy
+
+        - name: Filter out outgoing traffic
+          shell: |
+            firewall-cmd --permanent --delete-policy outgoing-rules
+          when: (
+              firewalld_rules is not defined or 
+              firewalld_rules.outgoing is not defined or 
+              (firewalld_rules.outgoing | length) == 0
+            ) and current_rules.rc == 0
+          register: removed_policy
+
+        - name: Remove inexistent rules
+          shell: |
+            firewall-cmd --permanent --policy outgoing-rules --remove-rich-rule='{{ item }}'
+          loop: "{{ current_rules.stdout_lines }}"
+          when: (
+            current_rules.rc == 0 and
+            firewalld_rules is defined and 
+            firewalld_rules.outgoing is defined and 
+            (firewalld_rules.outgoing | length) > 0 and
+            item not in firewalld_rules.outgoing)
+          register: removed_rules_checker
+        
+        - name: Add specific rules to outgoing rules
+          shell: |
+            firewall-cmd --permanent --policy outgoing-rules --add-rich-rule='{{ item }}'
+          loop: "{{ firewalld_rules.outgoing }}"
+          when: (
+            firewalld_rules is defined and 
+            firewalld_rules.outgoing is defined and 
+            (firewalld_rules.outgoing | length) > 0 and
+            (
+              current_rules.rc != 0 or
+              item not in current_rules.stdout_lines
+            ))
+          register: added_rules_checker
+
+        - name: Save and refresh new rule
+          shell: |
+            firewall-cmd --reload
+          when: (
+            created_policy is changed or 
+            removed_policy is changed or 
+            removed_rules_checker is changed or 
+            added_rules_checker is changed)
