@@ -79,39 +79,38 @@
     - name: Install stuff on the containers
       ansible.builtin.shell: incus exec ct-{{ container.hostname }} /opt/kickstart.sh
 
+    - name: Wait 120 seconds for port 22 to become open and contain "OpenSSH"
+      ansible.builtin.wait_for:
+        port: 22
+        host: '{{ container.ansible_host }}'
+        search_regex: OpenSSH
+        delay: 5
+        timeout: 120
+
+    - name: Check if ct-{{ container.hostname }} is a trusted machine
+      command: ssh-keygen -F {{ container.ansible_host }} -f /etc/ssh/ssh_known_hosts
+      changed_when: False
+      failed_when: False
+      register: trust_process
+
+    - name: Add ct-{{ container.hostname }} to trusted list
+      shell: ssh-keyscan {{ container.ansible_host }} >> /etc/ssh/ssh_known_hosts
+      when: trust_process.rc != 0
+
+    - name: Add ct-{{ container.hostname }} to trusted list
+      shell: ssh-keyscan {{ container.ansible_host }} >> /root/.ssh/known_hosts
+      when: trust_process.rc != 0
+
+    - name: Add ct-{{ container.hostname }} to cockpit machines
+      copy:
+        dest: /etc/cockpit/machines.d/10-ct-{{ container.hostname }}.json
+        content: |
+          {
+            "{{ container.ansible_host }}": {
+              "visible": true,
+              "address": "{{ container.ansible_host }}",
+              "user": "root"
+            }
+          }
+      when: trust_process.rc != 0
   when: incus_info.rc != 0
-
-- name: Wait 120 seconds for port 22 to become open and contain "OpenSSH"
-  ansible.builtin.wait_for:
-    port: 22
-    host: '{{ container.ansible_host }}'
-    search_regex: OpenSSH
-    delay: 5
-    timeout: 120
-
-- name: Check if ct-{{ container.hostname }} is a trusted machine
-  command: ssh-keygen -F {{ container.ansible_host }} -f /etc/ssh/ssh_known_hosts
-  changed_when: False
-  failed_when: False
-  register: trust_process
-
-- name: Add ct-{{ container.hostname }} to trusted list
-  shell: ssh-keyscan {{ container.ansible_host }} >> /etc/ssh/ssh_known_hosts
-  when: trust_process.rc != 0
-
-- name: Add ct-{{ container.hostname }} to trusted list
-  shell: ssh-keyscan {{ container.ansible_host }} >> /root/.ssh/known_hosts
-  when: trust_process.rc != 0
-
-- name: Add ct-{{ container.hostname }} to cockpit machines
-  copy:
-    dest: /etc/cockpit/machines.d/10-ct-{{ container.hostname }}.json
-    content: |
-      {
-        "{{ container.ansible_host }}": {
-          "visible": true,
-          "address": "{{ container.ansible_host }}",
-          "user": "root"
-        }
-      }
-  when: trust_process.rc != 0
