@@ -1,6 +1,6 @@
 ---
 
-- hosts: homelab:&machines
+- hosts: machines
   vars:
     general:
       pubkey: "{{ ssh_pub_keys[0] }}"
@@ -10,8 +10,9 @@
 
     storage_src: |
       {{
-        groups['homelab'] |
+        groups['containers'] |
           map('extract', hostvars) |
+          selectattr('parent_machine', 'equalto', hostname) |
           map('dict2items') |
           map('selectattr', 'key', 'in', ['storage_mnt']) |
           map('items2dict') |
@@ -30,9 +31,9 @@
         name: incus
         tasks_from: storage_paths
       loop: "{{ 
-        groups['homelab'] |
-          intersect(groups['containers']) |
+        groups['containers'] |
           map('extract', hostvars) |
+          selectattr('parent_machine', 'equalto', hostname) |
           community.general.json_query('[*].storage_mnt[*].path') |
           default([], true) | flatten }}"
       loop_control:
@@ -43,9 +44,9 @@
         name: incus
         tasks_from: container
       loop: "{{ 
-        groups['homelab'] |
-          intersect(groups['containers']) |
+        groups['containers'] |
           map('extract', hostvars) |
+          selectattr('parent_machine', 'equalto', hostname) |
           map('dict2items') |
           map(
             'selectattr', 'key', 'in', [

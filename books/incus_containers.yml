@@ -1,4 +1,4 @@
-- hosts: homelab:&containers
+- hosts: containers
 
   tasks:
     # Setup Firewall
