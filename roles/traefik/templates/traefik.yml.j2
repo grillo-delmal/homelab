@@ -23,6 +23,7 @@ entryPoints:
         domains:
           - main: "{{ domain_name }}"
             sans:
+              - "*.dummy.{{ base_domain_name }}"
               - "*.{{ domain_name }}"
    
 certificatesResolvers:
