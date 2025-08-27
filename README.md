@@ -11,7 +11,7 @@ This assumes that the server has Fedora installed and that it can be managed usi
 This playbook will try to provision/update all the infrastructure.
 
 ```sh
-ansible-playbook site.yml
+ansible-playbook -i <inventory path> -J site.yml
 ```
 
 ## Upgrade servers
@@ -22,12 +22,31 @@ This playbook will try to upgrade all infra packages
 ansible-playbook books/upgrade_all.yml
 ```
 
-## Provision certs and containers to proxmox host
+## Provision certs and containers to incus host
 
-This playbook will provision / update the container infrastructure in the main server using the information collected from the inventory.
+This playbook will provision / update the container infrastructure in the host incus servers using the information collected from the inventory.
+This includes:
+* Installing incus / incus webui / cockpit on the host machines.
+* Getting the domain certs for the machines.
+* Setting up the external storage.
+* Creating all the child containers.
+  * Setting up their visible and internal network.
+  * Installing cockpit, sshd and firewalld.
+  * Setting them up as a cockpit children from their host machine.
+  * Creating ansible user.
+  * Add ssh keys
+  * Firewall rules, sshd is only accesible from host machine.
 
 ```sh
-ansible-playbook books/setup_homelab.yml
+ansible-playbook books/incus_machines.yml
+```
+
+## Provision incus containers
+
+This playbook for now will provision the incus containers with specific firewall rules
+
+```sh
+ansible-playbook books/incus_machines.yml
 ```
 
 ## Rebuild / update specific app
@@ -35,7 +54,7 @@ ansible-playbook books/setup_homelab.yml
 If called directly, the playbooks will install / update the referenced app in the targets marked by the inventory.
 
 ```sh
-ansible-playbook books/build_{APPNAME}.yml
+ansible-playbook books/role_{APPNAME}.yml
 ```
 
 # About roles
@@ -61,33 +80,19 @@ Last update 2025/01/20
 ### inventory/main.yml
 
 ```yml
-# Group server and containers here
-# As for now it assumes that all the containers are in homelab
-# which has 1 server and multiple containers
-homelab:
+# Categorize between machine hosts and containers
+machines:
   hosts:
     <server_0>:
-    <container_0>:
-    <container_1>:
-    <container_2>:
-    <container_3>:
-    <container_4>:
-
-# Categorize between machine hosts and containers
-# The containers will get created on all the hosts that intersect
-# between machines and homelab, so make sure that its only one
-type:
-  children:
-    machines:
-      hosts:
-        <server_0>:
-    containers:
-      hosts:
-        <container_0>:
-        <container_1>:
-        <container_2>:
-        <container_3>:
-        <container_4>:
+    <server_1>:
+containers:
+  hosts:
+    <container_0_0>:
+    <container_0_1>:
+    <container_0_2>:
+    <container_1_0>:
+    <container_1_1>:
+    <container_1_2>:
 
 # Assign roles to each container
 # (assuming they are correctly configured for them)
@@ -95,24 +100,25 @@ roles:
   children:
     role_dns:
       hosts:
-        <container_0>:
+        <container_0_0>:
     role_storage:
       hosts:
-        <container_1>:
+        <container_0_1>:
     role_ai:
       hosts:
-        <container_2>:
+        <container_0_2>:
+        <container_1_2>:
     role_maruchan:
       hosts:
-        <container_3>:
+        <container_1_0>:
     role_traefik:
       hosts:
-        <container_4>:
+        <container_1_1>:
 ```
 
 ## Server variables
 
-### inventory/group_vars/homelab/main.yml
+### inventory/group_vars/all/main.yml
 
 ```yml
 # make sure to encrypt your sensible data using vault
@@ -131,11 +137,26 @@ letsencrypt_email: <mail>
 letsencrypt_challenge_type: dns_01
 ```
 
-### inventory/group_vars/homelab/machines.yml
+### inventory/group_vars/all/machines.yml
 
 ```yml
-# Required for now
-ansible_user: root
+# Make sure to create an ansible user on your incus host machines
+ansible_user: ansible
+```
+
+### inventory/group_vars/all/containers.yml
+
+```yml
+# Make sure to have this file as this
+ansible_user: ansible
+ansible_host: "{{ (internal_host | split('/'))[0] }}"
+parent_ip: |-
+  {{
+    (groups['machines'] |
+      map('extract', hostvars) |
+      selectattr('hostname', 'equalto', parent_machine))[0].ansible_host
+  }}
+ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o CheckHostIP=no -o ProxyCommand="ssh -W %h:%p -q root@{{ parent_ip }}"'
 ```
 
 ## Host variables
@@ -150,31 +171,27 @@ ns_name: root
 letsencrypt_domain_name: "{{ hostname }}.{{ domain_name }}"
 
 btrfs_storage:
+  device: /dev/disk/by-uuid/xxxxx
   path: /bindmounts
-  device: /dev/sdb0
 ```
 
 ### inventory/host_vars/<container_0>.yml
 
 ```yml
-ansible_host: <ip_addr>
 hostname: ns
 
-# Container
-proxmox_container:
-  vmid: <vmid>
-  disk: 'local-lvm:4'
-  cores: 1
-  memory: 512
-  unprivileged: False
+visible_host: <IP/MASK of visible ip in bridged device>
+internal_host: <IP/MASK of internal ip (incus network)>
+
+parent_machine: nano
 
 # Container
 incus_config:
-  disk: '8GiB'
+  disk: '4GiB'
   cores: 2
-  memory: 2GiB
+  memory: 512MiB
   privileged: False
-  nesting: True
+  nesting: False
 
 # External storage
 storage_mnt:
@@ -182,7 +199,7 @@ storage_mnt:
     target: <path in target>
     size: <capped by btrfs subvolume system (optional)>
 
-# NS Role
+# NS Role (role specific config)
 dns_config:
   trusted:
   - <netmask of trusted range>
