@@ -48,7 +48,7 @@
 
 - name: Permit traffic through https
   ansible.posix.firewalld:
-    zone: internal
+    zone: trusted
     port: "3000/tcp"
     state: enabled
     permanent: true
