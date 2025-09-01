@@ -1,0 +1,21 @@
+[Unit]
+Description=ComfyUI
+After=syslog.target
+After=network.target
+
+[Service]
+RestartSec=2s
+Type=simple
+User=root
+Group=root
+RuntimeDirectory=ComfyUI
+WorkingDirectory=/opt/ComfyUI
+
+# Restart=always
+ExecStart=/opt/ComfyUI/venv/bin/python main.py --listen --port=8080 --cpu --base-directory /opt/comfyui_base_dir
+Environment=HSA_OVERRIDE_GFX_VERSION=11.0.0
+
+[Install]
+WantedBy=multi-user.target
+
+

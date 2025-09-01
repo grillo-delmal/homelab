@@ -2,7 +2,7 @@
 
 - name: Prepare services
   dnf:
-    name: 
+    name:
       - podman
       - ramalama
     state: latest
@@ -14,6 +14,5 @@
   changed_when: False
 
 - name: Run ramalama
-  ansible.builtin.shell: "ramalama serve -d --name local_ai {{ ai_model | default('llama3.2:3b') }}"
+  ansible.builtin.shell: "ramalama serve -d -p 8080 --name local_ai {{ ai_model | default('llama3.2:3b') }}"
   when: result is failed
-    

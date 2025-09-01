@@ -1,0 +1,70 @@
+---
+
+- name: Prepare services
+  dnf:
+    name: 
+      - python
+      - python3-pip
+      - git
+      - libglvnd-glx
+    state: latest
+
+- name: Install ComfyUI
+  git:
+    repo: https://github.com/comfyanonymous/ComfyUI.git
+    dest: /opt/ComfyUI
+    version: v0.3.56
+
+- name: Fix pip
+  shell: pip install packaging
+  register: result
+  changed_when: not result.stdout.startswith("Requirement already satisfied:")
+
+- name: Install venv
+  shell:
+    cmd: |
+      python -m venv /opt/ComfyUI/venv
+    creates: 
+      /opt/ComfyUI/venv
+
+- name: Install torch stuff
+  pip:
+    name:
+      - torch
+      - torchvision
+      - torchaudio
+    extra_args: "--index-url https://download.pytorch.org/whl/rocm6.4"
+    virtualenv: /opt/ComfyUI/venv
+
+- name: Install requirements
+  pip:
+    requirements: /opt/ComfyUI/requirements.txt
+    virtualenv: /opt/ComfyUI/venv
+
+- name: Install Unload Model Node
+  git:
+    repo: https://github.com/SeanScripts/ComfyUI-Unload-Model
+    dest: /opt/comfyui_base_dir/custom_nodes/ComfyUI-Unload-Model
+    version: main
+
+- name: Install models
+  shell:
+    cmd: |
+      mkdir -p /opt/comfyui_base_dir/models/{{ item.type }}/
+      curl -L '{{ item.url }}' -o '/opt/comfyui_base_dir/models/{{ item.type }}/{{ item.name }}'
+    creates: /opt/comfyui_base_dir/models/{{ item.type }}/{{ item.name }}
+  loop: '{{ comfyui_config.models }}'
+
+- name: Add ComfyUI.service 
+  ansible.builtin.copy:
+    src: ComfyUI.service 
+    dest: /usr/lib/systemd/system/ComfyUI.service 
+    force: true
+    mode: '0644'
+
+- name: Start ComfyUI
+  service:
+    name: ComfyUI.service 
+    enabled: true
+    state: started
+

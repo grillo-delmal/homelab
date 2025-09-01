@@ -1,5 +1,9 @@
 ---
 
-- hosts: role_ai
+- hosts: role_ramalama
   roles:
   - role: ramalama
+
+- hosts: role_comfyui
+  roles:
+  - role: comfyui
