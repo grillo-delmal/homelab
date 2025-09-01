@@ -8,6 +8,7 @@ config:
 {% else %}
   limits.memory: 4GiB
 {% endif %}
+  limits.memory.swap: false
 {% if container.incus_config.privileged is defined %}
   security.privileged: '{{ container.incus_config.privileged }}'
 {% endif %}
