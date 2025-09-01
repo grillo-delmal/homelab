@@ -23,9 +23,7 @@
   ansible.builtin.copy:
     dest: /data/config.json
     content: "{{ 
-      config | 
-        combine({'maruai':{'hostname': ai_url}}, recursive=True) |
-        combine({'starbound': starbound_config}, recursive=True) |
+      maruchan_config | 
         to_json(indent=4, sort_keys=True) }}"
     mode: '0644'
   register: config_change

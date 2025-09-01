@@ -3,11 +3,3 @@
 - hosts: role_maruchan
   roles:
   - role: maruchan
-    config: "{{ maruchan_config }}"
-    ai_url: "http://{{ 
-      (groups['role_ai'] |
-        intersect(groups['containers']) |
-        map('extract', hostvars))[0].ansible_host }}:8080"
-    starbound_config:
-      hostname: starbound
-      port: 21026
