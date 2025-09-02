@@ -7,3 +7,7 @@
 - hosts: role_comfyui
   roles:
   - role: comfyui
+
+- hosts: role_openwebui
+  roles:
+  - role: openwebui

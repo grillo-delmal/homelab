@@ -1,0 +1,21 @@
+[Unit]
+Description=Open-WebUI
+After=syslog.target
+After=network.target
+
+[Service]
+RestartSec=2s
+Type=simple
+User=root
+Group=root
+RuntimeDirectory=open-webui
+WorkingDirectory=/opt/open-webui-venv/
+
+# Restart=always
+ExecStart=/opt/open-webui-venv/bin/open-webui serve --port 8080
+EnvironmentFile=/opt/open-webui.env
+
+[Install]
+WantedBy=multi-user.target
+
+

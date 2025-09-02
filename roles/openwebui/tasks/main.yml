@@ -1,0 +1,50 @@
+---
+
+- name: Prepare services
+  dnf:
+    name: 
+      - python3.12
+      - git
+      - python3-pip
+    state: latest
+
+- name: Fix pip
+  shell: pip install packaging
+  register: result
+  changed_when: not result.stdout.startswith("Requirement already satisfied:")
+
+- name: Create virtual env
+  shell:
+    cmd: |
+      python3.12 -m venv /opt/open-webui-venv
+    creates: 
+      /opt/open-webui-venv
+
+- name: Install open-webui
+  pip:
+    name: open-webui
+    virtualenv: /opt/open-webui-venv
+
+- name: Add open-webui.service 
+  ansible.builtin.copy:
+    src: open-webui.service
+    dest: /usr/lib/systemd/system/open-webui.service
+    force: true
+    mode: '0644'
+  register: add_service_result
+
+- name: Just force systemd to reread configs
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+  when: add_service_result is changed
+
+- name: Configure bind
+  template:
+    src: open-webui.env.j2
+    dest: /opt/open-webui.env
+
+- name: Start open-webui
+  service:
+    name: open-webui.service 
+    enabled: true
+    state: started
