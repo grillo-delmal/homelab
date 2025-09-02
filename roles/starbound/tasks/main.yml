@@ -60,6 +60,12 @@
   ansible.builtin.copy:
     src: starbound.service
     dest: "/etc/systemd/system/starbound.service"
+  register: add_service_result
+
+- name: Just force systemd to reread configs
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+  when: add_service_result is changed
   notify:
     - 'starbound : Restart starbound service'
 

@@ -61,6 +61,12 @@
     ansible.builtin.copy:
       src: mapserver@.service
       dest: "/etc/systemd/system/mapserver@.service"
+    register: add_service_result
+
+  - name: Just force systemd to reread configs
+    ansible.builtin.systemd_service:
+      daemon_reload: true
+    when: add_service_result is changed
 
   - name: Get mapserver key
     shell: cat /opt/mapserver_key

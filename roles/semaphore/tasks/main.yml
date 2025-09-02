@@ -24,7 +24,12 @@
     dest: /usr/lib/systemd/system/semaphoreui-alt.service
     force: true
     mode: '0644'
-  register: semaphore_service
+  register: add_service_result
+
+- name: Just force systemd to reread configs
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+  when: add_service_result is changed
 
 - name: var folder exists
   file:
