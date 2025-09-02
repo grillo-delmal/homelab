@@ -51,15 +51,6 @@
     path: '/var/lib/semaphore'
   register: config_file
 
-- name: Permit traffic through https
-  ansible.posix.firewalld:
-    zone: trusted
-    port: "3000/tcp"
-    state: enabled
-    permanent: true
-    immediate: true
-    offline: true
-
 - name: Initialize semaphore
   block:
     - name: Copy input template
