@@ -17,10 +17,16 @@ dnf -y install \
     cockpit-bridge \
     cockpit-podman
 
+cat <<EOF > /etc/ssh/sshd_config.d/30-pubkey-only.conf
+PasswordAuthentication no
+PubkeyAuthentication yes
+EOF
+
 systemctl daemon-reload
 systemctl set-default multi-user.target
-systemctl enable firewalld sshd cockpit.socket
-systemctl start firewalld sshd cockpit.socket
+systemctl disable sshd.socket
+systemctl enable firewalld sshd.service cockpit.socket
+systemctl start firewalld sshd.service cockpit.socket
 
 firewall-cmd --set-default-zone drop
 firewall-cmd --permanent --zone external --remove-service ssh
