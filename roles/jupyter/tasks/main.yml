@@ -67,7 +67,7 @@
       - "{{ (internal_host | split('/'))[0] }}:8888:8888"
     user: jupyter
     hostuser: jupyter
-    command: python3 -m jupyterlab
+    command: /opt/venv/bin/python -m jupyterlab
         --ServerApp.ip=0.0.0.0
         --ServerApp.port=8888
         --LabApp.collaborative=True
