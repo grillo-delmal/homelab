@@ -11,3 +11,7 @@
 - hosts: role_starbound
   roles:
   - role: starbound
+
+- hosts: role_mangband
+  roles:
+  - role: mangband
