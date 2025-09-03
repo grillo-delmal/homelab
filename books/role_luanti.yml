@@ -1,5 +1,0 @@
----
-
-- hosts: role_luanti
-  roles:
-  - role: luanti

@@ -1,5 +1,0 @@
----
-
-- hosts: role_starbound
-  roles:
-  - role: starbound

@@ -1,5 +1,0 @@
----
-
-- hosts: role_forgejo
-  roles:
-  - role: forgejo

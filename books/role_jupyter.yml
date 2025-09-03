@@ -1,5 +1,0 @@
----
-
-- hosts: role_jupyter
-  roles:
-  - role: jupyter

@@ -1,5 +1,0 @@
----
-
-- hosts: role_semaphore
-  roles:
-  - role: semaphore

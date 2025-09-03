@@ -1,0 +1,13 @@
+---
+
+- hosts: role_luanti
+  roles:
+  - role: luanti
+
+- hosts: role_veloren
+  roles:
+  - role: veloren
+
+- hosts: role_starbound
+  roles:
+  - role: starbound
