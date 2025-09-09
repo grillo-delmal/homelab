@@ -15,11 +15,11 @@ META_ADDRESS = "mangband.org"
 # Which port should our server listen on?  You only need to change this if
 # you are running multiple servers on one computer.  This should be an
 # even number, because TCP_PORT+1 is used for the admin console.
-TCP_PORT = 18346
+TCP_PORT = {{ mangband_config.port | default('18346') }}
 
 # If you need to bind to a specific name or IP use these.
 #BIND_NAME = "your.domainname-here.com"
-BIND_IP = "{{ mangband_config.bind_ip | default('0.0.0.0')}}"
+BIND_IP = "{{ mangband_config.bind_ip | default('0.0.0.0') }}"
 
 
 # Administration and Security options
