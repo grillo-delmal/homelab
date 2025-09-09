@@ -21,35 +21,6 @@
     - net-tools
     state: latest
 
-- name: Open/udp ports for wg
-  ansible.posix.firewalld:
-    zone: external
-    port: "{{ wgportal_config.ports }}/udp"
-    state: enabled
-    permanent: true
-    immediate: true
-    offline: true
-
-- name: Enable masquerading
-  ansible.posix.firewalld:
-    zone: external
-    masquerade: true
-    state: enabled
-    permanent: true
-    immediate: true
-    offline: true
-
-- name: Set external zone as the default
-  shell: |
-    if [ "$(firewall-cmd --get-default-zone)" == "external" ] 
-    then
-      echo "same"
-    else
-      firewall-cmd --set-default-zone external
-    fi
-  register: tmp
-  changed_when: tmp.stdout != "same" 
-
 - name: Folder exists
   file:
     path: "/var/lib/wg-portal/config/"

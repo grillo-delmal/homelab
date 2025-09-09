@@ -5,15 +5,6 @@
     name: minetest-server
     state: latest
 
-- name: Permit traffic in default zone on port {{ forgejo_config.app.server.http_port | default(3000) }}/tcp
-  ansible.posix.firewalld:
-    zone: external
-    port: "{{ luanti_config.world.port }}/udp"
-    state: enabled
-    permanent: true
-    immediate: true
-    offline: true
-
 - name: Make sure permissions are fine
   file: 
     dest: /var/lib/minetest

@@ -9,6 +9,18 @@
           - external
       register: current_rules
 
+    - name: Set default zone if defined
+      shell: |
+        if [ "$(firewall-cmd --get-default-zone)" == "{{ firewalld_rules.default }}" ] 
+        then
+          echo "same"
+        else
+          firewall-cmd --set-default-zone "{{ firewalld_rules.default }}"
+        fi
+      register: tmp
+      changed_when: tmp.stdout != "same"
+      when: firewalld_rules is defined and firewalld_rules.default is defined
+
     - name: Internal rules
       block:
 

@@ -13,15 +13,6 @@
     src: mangband.conf.j2
     dest: /etc/mangband.conf
 
-- name: Open firewall port
-  ansible.posix.firewalld:
-    zone: external
-    port: 18346/tcp
-    state: enabled
-    permanent: true
-    immediate: true
-    offline: true
-
 - name: Start server
   service:
     name: mangband.service
