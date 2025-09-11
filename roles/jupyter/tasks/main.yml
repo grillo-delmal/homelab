@@ -72,6 +72,7 @@
         --ServerApp.ip=0.0.0.0
         --ServerApp.port=8888
         --LabApp.collaborative=True
-        --IdentityProvider.token={{ jupyter_token }}
+        --IdentityProvider.token={{ jupyter_config.token }}
+        {{ jupyter_config.extra_params }}
         --no-browser
     state: started
