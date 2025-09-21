@@ -6,31 +6,50 @@
     filesystem_device: '{{ btrfs_storage.device }}'
 
 - name: Get current qgroup
-  shell: "btrfs qgroup show -reF --iec {{ btrfs_storage.path }}{{ storage_data.path }} | sed -n 3p | awk '{print $1}'"
+  shell: >-
+    btrfs
+    qgroup show -reF --iec
+    {{ btrfs_storage.path }}{{ storage_data.path }} |
+    sed -n 3p |
+    awk '{print $1}'
   register: qgroupid
-  changed_when: False
-  
+  changed_when: false
+
 - name: Get current size
-  shell: "btrfs qgroup show -reF --iec {{ btrfs_storage.path }}{{ storage_data.path }} | sed -n 3p | awk '{print $4}'"
+  shell: >-
+    btrfs
+    qgroup show -reF --iec
+    {{ btrfs_storage.path }}{{ storage_data.path }} |
+    sed -n 3p |
+    awk '{print $4}'
   register: max_referenced
-  changed_when: False
-  
+  changed_when: false
+
 - name: Get configured size
   shell: "echo {{ storage_data.size }} | numfmt --from=iec"
   register: expected_size
-  changed_when: False
+  changed_when: false
   when: "'size' in storage_data"
 
 - name: Resize on existing size config {{ qgroupid.stdout }}
-  shell: "btrfs qgroup limit {{ storage_data.size }} {{ qgroupid.stdout }} {{ btrfs_storage.path }}{{ storage_data.path }}"
-  changed_when: False
+  shell: >-
+    btrfs
+    qgroup limit {{ storage_data.size }}
+    {{ qgroupid.stdout }}
+    {{ btrfs_storage.path }}{{ storage_data.path }}
+  changed_when: false
   when: "'size' in storage_data and (
       ( max_referenced.stdout | int ) != ( expected_size.stdout | int )
     )"
 
 - name: No limit when no size config
-  shell: "btrfs qgroup limit 'none' {{ qgroupid.stdout }} {{ btrfs_storage.path }}{{ storage_data.path }}"
-  changed_when: False
-  when: "'size' not in storage_data and ( 
-      max_referenced.stdout != 'none' 
+  shell: >-
+    btrfs
+    qgroup
+    limit 'none'
+    {{ qgroupid.stdout }}
+    {{ btrfs_storage.path }}{{ storage_data.path }}
+  changed_when: false
+  when: "'size' not in storage_data and (
+      max_referenced.stdout != 'none'
     )"

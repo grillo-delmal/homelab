@@ -1,3 +1,6 @@
+---
+
+# yamllint disable rule:line-length
 - name: Importing (free) key
   ansible.builtin.rpm_key:
     state: present
@@ -10,10 +13,11 @@
 
 - name: Enable the RPM Fusion repository
   dnf:
-    name: 
+    name:
       - "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ansible_distribution_major_version}}.noarch.rpm"
       - "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ansible_distribution_major_version}}.noarch.rpm"
     state: present
+# yamllint enable rule:line-length
 
 - name: Install SteamCMD dependencies
   dnf:
@@ -47,13 +51,13 @@
   stat:
     path: '/steamcmd/steamcmd.sh'
   register: steamcmd_file
-  ignore_errors: True
+  ignore_errors: true
 
 - name: Install SteamCMD
   unarchive:
     src: "https://media.steampowered.com/installer/steamcmd_linux.tar.gz"
     dest: "/steamcmd"
-    remote_src: yes
+    remote_src: true
   when: "'stat' in steamcmd_file and not steamcmd_file.stat.exists"
 
 - name: Add starbound.service
@@ -120,11 +124,11 @@
 - name: update
   block:
     - name: Set /starbound to root
-      file: 
+      file:
         dest: /starbound
         owner: root
         group: root
-        recurse: yes
+        recurse: true
     - name: run update process
       ansible.builtin.expect:
         command: /update.sh {{ steam.username }}
@@ -135,11 +139,11 @@
       notify:
         - 'starbound : Restart starbound service'
     - name: Set /starbound back to starbound root
-      file: 
+      file:
         dest: /starbound
         owner: starbound
         group: starbound
-        recurse: yes
+        recurse: true
   when: check_updated is true
 
 - name: Check server settings

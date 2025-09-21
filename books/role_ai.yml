@@ -2,12 +2,12 @@
 
 - hosts: role_ramalama
   roles:
-  - role: ramalama
+    - role: ramalama
 
 - hosts: role_comfyui
   roles:
-  - role: comfyui
+    - role: comfyui
 
 - hosts: role_openwebui
   roles:
-  - role: openwebui
+    - role: openwebui

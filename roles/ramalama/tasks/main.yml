@@ -10,9 +10,13 @@
 - name: Check if ramalama is running
   ansible.builtin.shell: podman container inspect local_ai
   register: result
-  ignore_errors: True
-  changed_when: False
+  ignore_errors: true
+  changed_when: false
 
 - name: Run ramalama
-  ansible.builtin.shell: "ramalama serve -d -p 8080 --name local_ai {{ ai_model | default('llama3.2:3b') }}"
+  ansible.builtin.shell: >-
+    ramalama serve -d
+    -p 8080
+    --name local_ai
+    {{ ai_model | default('llama3.2:3b') }}
   when: result is failed

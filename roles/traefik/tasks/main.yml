@@ -3,7 +3,7 @@
 - name: Prepare services
   dnf:
     name:
-    - podman
+      - podman
     state: latest
 
 - name: Adding traefik.yml file
@@ -15,7 +15,7 @@
     - 'traefik : Restart traefik container'
 
 - name: Ensure directories are present
-  file: 
+  file:
     path: '/opt/config/'
     state: directory
     mode: '0744'

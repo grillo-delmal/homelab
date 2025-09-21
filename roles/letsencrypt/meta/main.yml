@@ -1,6 +1,10 @@
+---
+
 galaxy_info:
   author: Zachary LeBlanc
-  description: Generate Let's Encrypt certificates and verify via http-01 or dns-01 challenge.
+  description: >-
+    Generate Let's Encrypt certificates and
+    verify via http-01 or dns-01 challenge.
   company: Red Hat
 
   issue_tracker_url: https://github.com/zjleblanc/zjleblanc.utils/issues

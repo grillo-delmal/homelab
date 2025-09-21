@@ -2,5 +2,5 @@
 
 - name: Restart open-webui service
   service:
-    name: open-webui.service 
+    name: open-webui.service
     state: restarted

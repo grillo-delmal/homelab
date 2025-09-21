@@ -1,8 +1,10 @@
-- name: Enable COPR on dnf 
+---
+
+- name: Enable COPR on dnf
   dnf:
     name:
-    - dnf
-    - dnf-plugins-core
+      - dnf
+      - dnf-plugins-core
 
 - name: Enable semaphore grillo-delmal/semaphore
   community.general.copr:
@@ -13,12 +15,12 @@
 - name: Install semaphore and deps
   dnf:
     name:
-    - semaphore
-    - git
-    - ansible-collection-community-general
-    - python3-jmespath
+      - semaphore
+      - git
+      - ansible-collection-community-general
+      - python3-jmespath
 
-- name: Add semaphoreui-alt.service 
+- name: Add semaphoreui-alt.service
   ansible.builtin.copy:
     src: semaphoreui-alt.service
     dest: /usr/lib/systemd/system/semaphoreui-alt.service
@@ -40,11 +42,11 @@
     mode: '0750'
 
 - name: Make sure permissions are fine
-  file: 
+  file:
     dest: /var/lib/semaphore
     owner: semaphore
     group: semaphore
-    recurse: yes
+    recurse: true
 
 - name: Check if config.json exists
   stat:
@@ -61,7 +63,11 @@
         mode: '0640'
         dest: /opt/semaphore.stdin
     - name: Run setup
-      shell: sudo -u semaphore semaphore setup --config /var/lib/semaphore/config.json < /opt/semaphore.stdin
+      shell: >-
+        sudo -u semaphore
+        semaphore setup
+        --config /var/lib/semaphore/config.json
+        < /opt/semaphore.stdin
     - name: Remove stdin file
       file:
         path: "/opt/semaphore.stdin"

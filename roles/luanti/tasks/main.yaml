@@ -6,16 +6,16 @@
     state: latest
 
 - name: Make sure permissions are fine
-  file: 
+  file:
     dest: /var/lib/minetest
     owner: minetest
     group: minetest
-    recurse: yes
+    recurse: true
 
 - name: hotfix minetest until patch get's merged
   block:
 
-    - name: Replace minetest@.service with the correct one 
+    - name: Replace minetest@.service with the correct one
       ansible.builtin.copy:
         src: minetest@.service
         dest: /usr/lib/systemd/system/minetest@.service
@@ -34,52 +34,55 @@
 
 - name: install mapserver if activated
   block:
+    - name: Ensure mapserver directory exists
+      file:
+        path: /opt/mapserver
+        state: directory
 
-  - name: Ensure mapserver directory exists
-    file:
-      path: /opt/mapserver
-      state: directory
+    # yamllint disable rule:line-length
+    - name: Install mapserver
+      unarchive:
+        src: "https://github.com/minetest-mapserver/mapserver/releases/download/v4.9.1/mapserver_4.9.1_linux_amd64.tar.gz"
+        dest: "/opt/mapserver/"
+        owner: minetest
+        group: minetest
+        remote_src: true
+    # yamllint enable rule:line-length
 
-  - name: Install mapserver
-    unarchive:
-      src: "https://github.com/minetest-mapserver/mapserver/releases/download/v4.9.1/mapserver_4.9.1_linux_amd64.tar.gz"
-      dest: "/opt/mapserver/"
-      owner: minetest
-      group: minetest
-      remote_src: yes
+    - name: Install mapserver service
+      ansible.builtin.copy:
+        src: mapserver@.service
+        dest: "/etc/systemd/system/mapserver@.service"
+      register: add_service_result
 
-  - name: Install mapserver service
-    ansible.builtin.copy:
-      src: mapserver@.service
-      dest: "/etc/systemd/system/mapserver@.service"
-    register: add_service_result
+    - name: Just force systemd to reread configs
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+      when: add_service_result is changed
 
-  - name: Just force systemd to reread configs
-    ansible.builtin.systemd_service:
-      daemon_reload: true
-    when: add_service_result is changed
+    - name: Get mapserver key
+      shell: cat /opt/mapserver_key
+      register: data
+      ignore_errors: true
+      changed_when: false
 
-  - name: Get mapserver key
-    shell: cat /opt/mapserver_key
-    register: data
-    ignore_errors: True
-    changed_when: False
+    - name: Generate mapserver secretkey
+      set_fact:
+        mapserver_secretkey: "{{
+            lookup('password', '/dev/null length=15 chars=ascii_letters')
+          }}"
+      when: data is failed
 
-  - name: Generate mapserver secretkey
-    set_fact:
-      mapserver_secretkey: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters') }}"
-    when: data is failed
+    - name: Read mapserver secretkey
+      set_fact:
+        mapserver_secretkey: "{{ data.stdout }}"
+      when: data is not failed
 
-  - name: Read mapserver secretkey
-    set_fact:
-      mapserver_secretkey: "{{ data.stdout }}"
-    when: data is not failed
-
-  - name: Save generated key
-    ansible.builtin.copy:
-      dest: "/opt/mapserver_key"
-      content: "{{ mapserver_secretkey }}"
-      mode: 0600
+    - name: Save generated key
+      ansible.builtin.copy:
+        dest: "/opt/mapserver_key"
+        content: "{{ mapserver_secretkey }}"
+        mode: 0600
 
   when: luanti_config.mapserver is defined
 
@@ -110,23 +113,27 @@
 - name: Download game
   ansible.builtin.get_url:
     url: '{{ luanti_config.game.url }}'
-    dest: "/opt/games/{{ ( luanti_config.game.url | urlsplit('path') | split('/'))[-1] }}"
+    dest: "/opt/games/{{
+        ( luanti_config.game.url | urlsplit('path') | split('/'))[-1]
+      }}"
   register: game_archive
 
 - name: Install new game
   block:
-  - name: Remove current version of the game if exist
-    file:
-      path: "{{ mine_home }}/.minetest/games/{{ luanti_config.game.name }}"
-      state: absent
+    - name: Remove current version of the game if exist
+      file:
+        path: "{{ mine_home }}/.minetest/games/{{ luanti_config.game.name }}"
+        state: absent
 
-  - name: Game is available
-    unarchive:
-      src: "/opt/games/{{ ( luanti_config.game.url | urlsplit('path') | split('/'))[-1] }}"
-      dest: "{{ mine_home }}/.minetest/games/"
-      owner: minetest
-      group: minetest
-      remote_src: yes
+    - name: Game is available
+      unarchive:
+        src: "/opt/games/{{
+            ( luanti_config.game.url | urlsplit('path') | split('/'))[-1]
+          }}"
+        dest: "{{ mine_home }}/.minetest/games/"
+        owner: minetest
+        group: minetest
+        remote_src: true
   when: game_archive is changed and not ansible_check_mode
   notify:
     - 'luanti : Restart minetest service'
@@ -141,7 +148,14 @@
   file:
     path: "item.path"
     state: absent
-  when: "(item.path | split('/') )[-1] not in ( luanti_config.game.mods | default([]) | map(attribute='name') )"
+  when: "(
+    item.path |
+      split('/')
+    )[-1] not in (
+      luanti_config.game.mods |
+        default([]) |
+          map(attribute='name')
+    )"
   loop: "{{ installed_mods.files }}"
 
 - name: Mods folder archive exists
@@ -171,7 +185,7 @@
     dest: "{{ mine_config }}"
     owner: minetest
     group: minetest
-    backup: yes
+    backup: true
   notify:
     - 'luanti : Restart minetest service'
 
@@ -180,42 +194,42 @@
     name: minetest@{{ luanti_config.world.id }}.service
     enabled: true
     state: started
-    
-- block:
-  - name: Check if configuration changed
-    become: true
-    become_user: minetest
-    template:
-      src: mapserver.json.j2
-      dest: "{{ mine_home }}/{{ luanti_config.world.id }}/test.mapserver.json"
-      owner: minetest
-      group: minetest
-    register: mapserver_canary
 
-  - name: Configure mapserver port
-    become: true
-    become_user: minetest
-    template:
-      src: mapserver.json.j2
-      dest: "{{ mine_home }}/{{ luanti_config.world.id }}/mapserver.json"
-      owner: minetest
-      group: minetest
-    when: mapserver_canary is changed
-    notify:
-      - 'luanti : Restart mapserver service'
+- name: Run mapserver
+  block:
+    - name: Check if configuration changed
+      become: true
+      become_user: minetest
+      template:
+        src: mapserver.json.j2
+        dest: "{{ mine_home }}/{{ luanti_config.world.id }}/test.mapserver.json"
+        owner: minetest
+        group: minetest
+      register: mapserver_canary
 
-  - name: Wait for world to exist
-    become: true
-    become_user: minetest
-    ansible.builtin.wait_for:
-      path: "{{ mine_home }}/{{ luanti_config.world.id }}/map.sqlite"
-      state: present
+    - name: Configure mapserver port
+      become: true
+      become_user: minetest
+      template:
+        src: mapserver.json.j2
+        dest: "{{ mine_home }}/{{ luanti_config.world.id }}/mapserver.json"
+        owner: minetest
+        group: minetest
+      when: mapserver_canary is changed
+      notify:
+        - 'luanti : Restart mapserver service'
 
-  - name: Start Minetest-mapserver
-    service:
-      name: mapserver@{{ luanti_config.world.id }}.service
-      enabled: true
-      state: started
+    - name: Wait for world to exist
+      become: true
+      become_user: minetest
+      ansible.builtin.wait_for:
+        path: "{{ mine_home }}/{{ luanti_config.world.id }}/map.sqlite"
+        state: present
+
+    - name: Start Minetest-mapserver
+      service:
+        name: mapserver@{{ luanti_config.world.id }}.service
+        enabled: true
+        state: started
 
   when: luanti_config.mapserver is defined
-

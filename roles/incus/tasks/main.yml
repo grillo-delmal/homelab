@@ -1,7 +1,7 @@
 ---
 - name: Incus dependencies
   dnf:
-    name: 
+    name:
       - incus
       - dpkg
     state: present
@@ -12,11 +12,13 @@
     path: '/opt/incus/ui/index.html'
   register: incus_webui_installed
 
+# yamllint disable rule:line-length
 - name: Download incus-webui
   ansible.builtin.get_url:
     url: "https://pkgs.zabbly.com/incus/stable/pool/main/i/incus/incus-ui-canonical_6.13-ubuntu24.04-202506210432_arm64.deb"
     dest: "/opt/incus-ui-canonical.deb"
   when: not incus_webui_installed.stat.exists
+# yamllint enable rule:line-length
 
 - name: Extract the deb into a folder
   ansible.builtin.command: 'dpkg -x /opt/incus-ui-canonical.deb /opt/incus-ui/'
@@ -24,7 +26,7 @@
 
 - name: Move ui to propper path
   ansible.builtin.copy:
-    remote_src: True
+    remote_src: true
     src: /opt/incus-ui/opt/incus
     dest: /opt
   when: not incus_webui_installed.stat.exists
@@ -48,7 +50,7 @@
 - name: Restart service
   ansible.builtin.systemd_service:
     state: restarted
-    daemon_reload: True
+    daemon_reload: true
     name: incus
   when: not incus_webui_installed.stat.exists
 
@@ -74,44 +76,62 @@
     path: "/etc/letsencrypt/certs/fullchain_{{ letsencrypt_domain_name }}.pem"
   register: src_chain_status
 
-#- name: Check dest chain
-#  stat:
-#    path: '/etc/pve/nodes/{{ hostname }}/pveproxy-ssl.pem'
-#  register: dest_chain_status
+# - name: Check dest chain
+#   stat:
+#     path: '/etc/pve/nodes/{{ hostname }}/pveproxy-ssl.pem'
+#   register: dest_chain_status
 
 # FIXME
-#- name: Set new cert chain
-#  shell: cp -f "/etc/letsencrypt/certs/fullchain_{{ letsencrypt_domain_name }}.pem" '/etc/pve/nodes/{{ hostname }}/pveproxy-ssl.pem'
-#  when: src_chain_status.stat.exists and ( (not dest_chain_status.stat.exists) or src_chain_status.stat.checksum != dest_chain_status.stat.checksum)
-#  register: new_chain
+# - name: Set new cert chain
+#   shell: >-
+#     cp -f
+#     "/etc/letsencrypt/certs/fullchain_{{ letsencrypt_domain_name }}.pem"
+#     '/etc/pve/nodes/{{ hostname }}/pveproxy-ssl.pem'
+#   when: src_chain_status.stat.exists and (
+#       (
+#         not dest_chain_status.stat.exists
+#       ) or (
+#         src_chain_status.stat.checksum != dest_chain_status.stat.checksum
+#       )
+#     )
+#   register: new_chain
 
 - name: Check src key
   stat:
     path: "/etc/letsencrypt/keys/{{ letsencrypt_domain_name }}.key"
   register: src_key_status
 
-#- name: Check dest key
-#  stat:
-#    path: '/etc/pve/nodes/{{ hostname }}/pveproxy-ssl.key'
-#  register: dest_key_status
+# - name: Check dest key
+#   stat:
+#     path: '/etc/pve/nodes/{{ hostname }}/pveproxy-ssl.key'
+#   register: dest_key_status
 
-#- name: Set new cert key
-#  shell: cp -f "/etc/letsencrypt/keys/{{ letsencrypt_domain_name }}.key" '/etc/pve/nodes/{{ hostname }}/pveproxy-ssl.key'
-#  when: src_key_status.stat.exists and ( (not dest_key_status.stat.exists) or src_key_status.stat.checksum != dest_key_status.stat.checksum)
-#  register: new_key
+# - name: Set new cert key
+#   shell: >-
+#     cp -f
+#     "/etc/letsencrypt/keys/{{ letsencrypt_domain_name }}.key"
+#     '/etc/pve/nodes/{{ hostname }}/pveproxy-ssl.key'
+#   when: src_key_status.stat.exists and (
+#       (
+#         not dest_key_status.stat.exists
+#       ) or (
+#         src_key_status.stat.checksum != dest_key_status.stat.checksum
+#       )
+#     )
+#   register: new_key
 
-#- name: Reset if changed
-#  ansible.builtin.systemd_service:
-#    state: restarted
-#    daemon_reload: True
-#    name: pveproxy
-#  when: new_chain is changed or new_key is changed
+# - name: Reset if changed
+#   ansible.builtin.systemd_service:
+#     state: restarted
+#     daemon_reload: True
+#     name: pveproxy
+#   when: new_chain is changed or new_key is changed
 
 # Enable/start incus
 - name: Start incus
   ansible.builtin.systemd_service:
     state: started
-    enabled: True
+    enabled: true
     name: incus
 
 - name: Upload container init script
@@ -125,11 +145,11 @@
       usermod -a -G wheel ansible
       mkdir -p /home/ansible/.ssh/
       cp /root/.ssh/authorized_keys /home/ansible/.ssh/
-      chown -R ansible:ansible /home/ansible/.ssh/authorized_keys 
+      chown -R ansible:ansible /home/ansible/.ssh/authorized_keys
       systemctl start sshd
     mode: '0755'
 
-#TODO: Configure Incus
+# TODO: Configure Incus
 
 # Cockpit host
 - name: Generate an OpenSSH keypair with the default values (4096 bits, rsa)
@@ -145,8 +165,8 @@
     group: root
 
 - command: "cat /root/.ssh/id_rsa.pub"
-  changed_when: False
-  failed_when: False
+  changed_when: false
+  failed_when: false
   register: pubkey_result
 
 - name: Set master pubkey as fact
@@ -183,10 +203,10 @@
 
 - name: Make sure quotas are enabled
   shell: btrfs quota enable {{ btrfs_storage.path }}
-  changed_when: False
+  changed_when: false
 
 - name: Prepare all subvolumes
-  ansible.builtin.include_tasks:  btrfs_subvolume.yml
+  ansible.builtin.include_tasks: btrfs_subvolume.yml
   vars:
     storage_data: '{{ item }}'
   loop: '{{ storage_src }}'

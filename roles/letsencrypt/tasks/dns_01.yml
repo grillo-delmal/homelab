@@ -1,6 +1,7 @@
 ---
+# yamllint disable rule:line-length
 - name: Create TXT record
-  when: 
+  when:
     - letsencrypt_dns01_provider == 'cloudflare'
     - letsencrypt_domain_name in r_acme_challenge.challenge_data
   community.general.cloudflare_dns:
@@ -11,3 +12,4 @@
     value: "{{ r_acme_challenge.challenge_data[letsencrypt_domain_name]['dns-01'].resource_value }}"
     solo: true
     state: present
+# yamllint enable rule:line-length

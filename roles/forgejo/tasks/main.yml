@@ -1,10 +1,12 @@
+---
+
 - name: Install forgejo and deps
   dnf:
     name:
-    - forgejo
-    - git
-    - git-lfs
-    - sqlite
+      - forgejo
+      - git
+      - git-lfs
+      - sqlite
 
 - name: Unlock 'forgejo' user
   ansible.builtin.user:
@@ -18,11 +20,11 @@
     state: present
 
 - name: Make sure permissions are fine
-  file: 
+  file:
     dest: /var/lib/forgejo
     owner: forgejo
     group: forgejo
-    recurse: yes
+    recurse: true
 
 - name: Upload sshd conf
   ansible.builtin.copy:
@@ -65,36 +67,40 @@
 
 - name: Wait until forgejo server is available
   uri:
-    url: "{{ forgejo_config.app.server.protocol | default('http') }}://127.0.0.1:{{ forgejo_config.app.server.http_port | default(3000) }}"
+    url: "{{
+        forgejo_config.app.server.protocol | default('http')
+      }}://127.0.0.1:{{
+        forgejo_config.app.server.http_port | default(3000)
+      }}"
   register: result
   until: "result.status == 200"
   retries: 5
   delay: 2
 
 - name: Check users
-  shell: 
-    "sudo -u forgejo forgejo \
-      -w /var/lib/forgejo \
-      -c /etc/forgejo/conf/app.ini \
-      admin user list --admin | \
-    awk '{print $2}' | \
-    grep -w {{ forgejo_config.admin.username }}"
+  shell: >-
+    sudo -u forgejo forgejo
+    -w /var/lib/forgejo
+    -c /etc/forgejo/conf/app.ini
+    admin user list --admin |
+    awk '{print $2}' |
+    grep -w {{ forgejo_config.admin.username }}
   register: admin_user_query
-  changed_when: False
-  ignore_errors: True
+  changed_when: false
+  ignore_errors: true
 
 - name: Create user if it doesn't exist
-  shell:
-    "sudo -u forgejo forgejo \
-      -w /var/lib/forgejo \
-      -c /etc/forgejo/conf/app.ini \
-      admin user create \
-        --username {{ forgejo_config.admin.username }} \
-        --password {{ forgejo_config.admin.password }} \
-        --email {{ forgejo_config.admin.email }} \
-        --admin"
+  shell: >-
+    sudo -u forgejo forgejo
+    -w /var/lib/forgejo
+    -c /etc/forgejo/conf/app.ini
+    admin user create
+    --username {{ forgejo_config.admin.username }}
+    --password {{ forgejo_config.admin.password }}
+    --email {{ forgejo_config.admin.email }}
+    --admin
   when: admin_user_query is failed
-  no_log: True
+  no_log: true
 
 - name: Change permissions
   file:

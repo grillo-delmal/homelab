@@ -2,7 +2,7 @@
 
 - name: mangband server is installed
   dnf:
-    name: 
+    name:
       - https://gitlab.com/-/project/73914178/uploads/47c905ffca60471ae1fc48a0f51343c3/mangband-data-1.5.3-4.fc42.noarch.rpm
       - https://gitlab.com/-/project/73914178/uploads/279d66425903705c72ec6f838ea801d9/mangband-1.5.3-4.fc42.x86_64.rpm
     state: latest

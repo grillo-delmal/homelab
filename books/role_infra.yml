@@ -2,47 +2,46 @@
 
 - hosts: role_dns
   roles:
-  - role: dns
-    domain: "{{ domain_name }}"
-    dns: "{{ dns_config }}"
-    servers: |
-      {{
-        groups['machines'] | 
-          map('extract', hostvars) | 
-          map('dict2items') | 
-          map('selectattr', 'key', 'in', ['ansible_host', 'hostname']) | 
-          map('items2dict')
-      }}
-    containers: |
-      {{
-        groups['containers'] |
-          map('extract', hostvars) |
-          map('dict2items') |
-          map('selectattr', 'key', 'in', ['dns_list']) |
-          map('items2dict')
-      }}
+    - role: dns
+      domain: "{{ domain_name }}"
+      dns: "{{ dns_config }}"
+      servers: |
+        {{
+          groups['machines'] |
+            map('extract', hostvars) |
+            map('dict2items') |
+            map('selectattr', 'key', 'in', ['ansible_host', 'hostname']) |
+            map('items2dict')
+        }}
+      containers: |
+        {{
+          groups['containers'] |
+            map('extract', hostvars) |
+            map('dict2items') |
+            map('selectattr', 'key', 'in', ['dns_list']) |
+            map('items2dict')
+        }}
 
 - hosts: role_traefik
   roles:
-  - role: traefik
-    targets: |
-      {{
-        groups['all'] |
-          map('extract', hostvars) |
-          map('dict2items') |
-          map('selectattr', 'key', 'in', ['hostname', 'traefik_config']) |
-          map('items2dict')
-      }}
+    - role: traefik
+      targets: |
+        {{
+          groups['all'] |
+            map('extract', hostvars) |
+            map('dict2items') |
+            map('selectattr', 'key', 'in', ['hostname', 'traefik_config']) |
+            map('items2dict')
+        }}
 
 - hosts: role_wgportal
   roles:
-  - role: wgportal
+    - role: wgportal
 
 - hosts: role_forgejo
   roles:
-  - role: forgejo
+    - role: forgejo
 
 - hosts: role_semaphore
   roles:
-  - role: semaphore
-
+    - role: semaphore

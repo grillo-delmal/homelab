@@ -2,7 +2,7 @@
 
 - name: Prepare services
   dnf:
-    name: 
+    name:
       - python3.12
       - git
       - python3-pip
@@ -17,7 +17,7 @@
   shell:
     cmd: |
       python3.12 -m venv /opt/open-webui-venv
-    creates: 
+    creates:
       /opt/open-webui-venv
 
 - name: Install open-webui
@@ -28,7 +28,7 @@
   notify:
     - 'openwebui : Restart open-webui service'
 
-- name: Add open-webui.service 
+- name: Add open-webui.service
   ansible.builtin.copy:
     src: open-webui.service
     dest: /usr/lib/systemd/system/open-webui.service
@@ -48,6 +48,6 @@
 
 - name: Start open-webui
   service:
-    name: open-webui.service 
+    name: open-webui.service
     enabled: true
     state: started

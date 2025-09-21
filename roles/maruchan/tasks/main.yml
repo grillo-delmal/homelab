@@ -3,8 +3,8 @@
 - name: Prepare services
   dnf:
     name:
-    - podman
-    - git
+      - podman
+      - git
     state: latest
 
 - name: Download code
@@ -22,8 +22,8 @@
 - name: Add config
   ansible.builtin.copy:
     dest: /data/config.json
-    content: "{{ 
-      maruchan_config | 
+    content: "{{
+      maruchan_config |
         to_json(indent=4, sort_keys=True) }}"
     mode: '0644'
   register: config_change

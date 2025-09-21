@@ -3,8 +3,8 @@
 - name: Prepare services
   dnf:
     name:
-    - podman
-    - git
+      - podman
+      - git
     state: latest
 
 - name: Ensure group "jupyter" exists
@@ -63,17 +63,17 @@
     volumes:
       - "/data:/jupyter_stuff:rw,Z"
     workdir: /jupyter_stuff
-    ports: 
+    ports:
       - "{{ (internal_host | split('/'))[0] }}:8888:8888"
     user: jupyter
     hostuser: jupyter
-    command: >- 
+    command: >-
       /opt/venv/bin/python -m jupyterlab
-        --ServerApp.ip=0.0.0.0
-        --ServerApp.port=8888
-        --ServerApp.allow_remote_access=True
-        --LabApp.collaborative=True
-        --IdentityProvider.token={{ jupyter_config.token }}
-        {{ jupyter_config.extra_params }}
-        --no-browser
+      --ServerApp.ip=0.0.0.0
+      --ServerApp.port=8888
+      --ServerApp.allow_remote_access=True
+      --LabApp.collaborative=True
+      --IdentityProvider.token={{ jupyter_config.token }}
+      {{ jupyter_config.extra_params }}
+      --no-browser
     state: started

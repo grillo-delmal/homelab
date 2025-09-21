@@ -3,7 +3,7 @@
 - name: Prepare services
   dnf:
     name:
-    - bind
+      - bind
     state: present
 
 - name: Configure bind
@@ -24,7 +24,16 @@
     src: main.zone.j2
     dest: /var/named/{{ domain }}.zone
   vars:
-    serial_num: '{{ ansible_date_time.year }}{{ "%02d" % ( ansible_date_time.month | int ) }}{{ "%02d" % ( ansible_date_time.day | int ) }}{{ "%02d" % ( ansible_date_time.hour | int ) }}'
+    serial_num: >-
+      {{
+        ansible_date_time.year
+      }}{{
+        "%02d" % ( ansible_date_time.month | int )
+      }}{{
+        "%02d" % ( ansible_date_time.day | int )
+      }}{{
+        "%02d" % ( ansible_date_time.hour | int )
+      }}
   when: raw_zone is changed
   notify:
     - 'dns : Restart named service'
@@ -62,5 +71,4 @@
   systemd:
     name: named.service
     state: started
-    enabled: True
-
+    enabled: true

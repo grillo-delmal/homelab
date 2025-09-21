@@ -1,10 +1,10 @@
 ---
 
-- name: Enable COPR on dnf 
+- name: Enable COPR on dnf
   dnf:
     name:
-    - dnf
-    - dnf-plugins-core
+      - dnf
+      - dnf-plugins-core
 
 - name: Enable wg-portal grillo-delmal/wg-portal
   community.general.copr:
@@ -15,10 +15,10 @@
 - name: Prepare services
   dnf:
     name:
-    - wg-portal
-    - git
-    - wireguard-tools
-    - net-tools
+      - wg-portal
+      - git
+      - wireguard-tools
+      - net-tools
     state: latest
 
 - name: Folder exists
@@ -30,7 +30,7 @@
   template:
     src: config.yml.j2
     dest: "/var/lib/wg-portal/config/config.yml"
-  notify: 
+  notify:
     - 'wgportal : Restart wgportal service'
 
 - name: Start service

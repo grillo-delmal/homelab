@@ -1,38 +1,40 @@
+---
+
 - name: Get info from ct-{{ container.hostname }}
   command: incus info ct-{{ container.hostname }}
-  changed_when: False
-  failed_when: False
+  changed_when: false
+  failed_when: false
   register: incus_info
 
 - name: Copy input template
   template:
     src: config.stdin.j2
     dest: /tmp/config.stdin
-  changed_when: False
+  changed_when: false
 
 - name: Copy auth keys template
   template:
     src: authorized_keys.j2
     dest: /tmp/authorized_keys
-  changed_when: False
+  changed_when: false
 
 - name: Copy initial network config for eth0
   template:
     src: eth0.network.j2
     dest: /tmp/eth0.network
-  changed_when: False
+  changed_when: false
 
 - name: Copy initial network config for eth1
   template:
     src: eth1.network.j2
     dest: /tmp/eth1.network
-  changed_when: False
+  changed_when: false
 
 - name: Copy kickstart script
   template:
     src: kickstart.sh.j2
     dest: /tmp/kickstart.sh
-  changed_when: False
+  changed_when: false
 
 - name: Container ct-{{ container.hostname }} already exists
   block:
@@ -58,26 +60,49 @@
 
     - name: Run setup on ct-{{ container.hostname }}
       shell: |
-        incus create images:fedora/42/default ct-{{ container.hostname }} < /tmp/config.stdin
-        incus file create ct-{{ container.hostname }}/home/ansible/.ssh/
-        incus file create ct-{{ container.hostname }}/root/.ssh/
-        incus file push /tmp/authorized_keys ct-{{ container.hostname }}/home/ansible/.ssh/authorized_keys
-        incus file push /tmp/authorized_keys ct-{{ container.hostname }}/root/.ssh/authorized_keys
-        incus file push /tmp/config.stdin ct-{{ container.hostname }}/opt/config.stdin
-        incus file push /tmp/eth0.network ct-{{ container.hostname }}/etc/systemd/network/eth0.network
-        incus file push /tmp/eth1.network ct-{{ container.hostname }}/etc/systemd/network/eth1.network
-        incus file push /tmp/kickstart.sh ct-{{ container.hostname }}/opt/kickstart.sh --mode 0755
+        incus create \
+          images:fedora/42/default ct-{{ container.hostname }} \
+          < /tmp/config.stdin
+        incus file create \
+          ct-{{ container.hostname }}/home/ansible/.ssh/
+        incus file create \
+          ct-{{ container.hostname }}/root/.ssh/
+        incus file push \
+          /tmp/authorized_keys \
+          ct-{{ container.hostname }}/home/ansible/.ssh/authorized_keys
+        incus file push \
+          /tmp/authorized_keys \
+          ct-{{ container.hostname }}/root/.ssh/authorized_keys
+        incus file push \
+          /tmp/config.stdin \
+          ct-{{ container.hostname }}/opt/config.stdin
+        incus file push \
+          /tmp/eth0.network \
+          ct-{{ container.hostname }}/etc/systemd/network/eth0.network
+        incus file push \
+          /tmp/eth1.network \
+          ct-{{ container.hostname }}/etc/systemd/network/eth1.network
+        incus file push \
+          /tmp/kickstart.sh \
+          ct-{{ container.hostname }}/opt/kickstart.sh --mode 0755
         incus start ct-{{ container.hostname }}
 
     - name: Wait for container to be active and to have an active connection
-      ansible.builtin.shell: incus exec ct-{{ container.hostname }} -- ping -c 1 www.google.com
+      ansible.builtin.shell: >-
+        incus exec
+        ct-{{ container.hostname }}
+        --
+        ping -c 1 www.google.com
       register: service_status
       until: service_status.rc == 0
       retries: 30  # Number of retries
       delay: 5    # Delay in seconds between retries
 
     - name: Install stuff on the containers
-      ansible.builtin.shell: incus exec ct-{{ container.hostname }} /opt/kickstart.sh
+      ansible.builtin.shell: >-
+        incus exec
+        ct-{{ container.hostname }}
+        /opt/kickstart.sh
 
     - name: Wait 120 seconds for port 22 to become open and contain "OpenSSH"
       ansible.builtin.wait_for:
@@ -88,13 +113,20 @@
         timeout: 120
 
     - name: Check if ct-{{ container.hostname }} is a trusted machine
-      command: ssh-keygen -F {{ container.ansible_host }} -f /etc/ssh/ssh_known_hosts
-      changed_when: False
-      failed_when: False
+      command: >-
+        ssh-keygen
+        -F {{ container.ansible_host }}
+        -f /etc/ssh/ssh_known_hosts
+      changed_when: false
+      failed_when: false
       register: trust_process
 
     - name: Add ct-{{ container.hostname }} to trusted list
-      shell: ssh-keyscan {{ container.ansible_host }} >> /etc/ssh/ssh_known_hosts
+      shell: >-
+        ssh-keyscan
+        {{ container.ansible_host }}
+        >>
+        /etc/ssh/ssh_known_hosts
       when: trust_process.rc != 0
 
     - name: Add ct-{{ container.hostname }} to trusted list

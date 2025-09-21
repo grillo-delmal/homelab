@@ -2,16 +2,16 @@
 
 - hosts: role_luanti
   roles:
-  - role: luanti
+    - role: luanti
 
 - hosts: role_veloren
   roles:
-  - role: veloren
+    - role: veloren
 
 - hosts: role_starbound
   roles:
-  - role: starbound
+    - role: starbound
 
 - hosts: role_mangband
   roles:
-  - role: mangband
+    - role: mangband

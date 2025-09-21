@@ -4,7 +4,7 @@
   stat:
     path: '{{ btrfs_storage.path }}{{ mount_data_path }}'
   register: register_name
-  ignore_errors: True
+  ignore_errors: true
 
 - name: Path {{ btrfs_storage.path }}{{ mount_data_path }} must exist
   ansible.builtin.file:

@@ -2,8 +2,8 @@
 
 - hosts: role_maruchan
   roles:
-  - role: maruchan
+    - role: maruchan
 
 - hosts: role_jupyter
   roles:
-  - role: jupyter
+    - role: jupyter

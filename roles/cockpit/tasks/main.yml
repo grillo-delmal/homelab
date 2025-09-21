@@ -1,20 +1,22 @@
+---
+
 - name: Prepare services
   dnf:
     name:
-    - cockpit
-    - cockpit-ws
-    - cockpit-ws-selinux
-    - cockpit-system
-    - cockpit-bridge
-    - cockpit-podman
-    - cockpit-networkmanager
-    - cockpit-storaged
+      - cockpit
+      - cockpit-ws
+      - cockpit-ws-selinux
+      - cockpit-system
+      - cockpit-bridge
+      - cockpit-podman
+      - cockpit-networkmanager
+      - cockpit-storaged
     state: latest
-  become: True
+  become: true
 
 - name: Start cockpit
   service:
     name: cockpit.socket
     state: started
-    enabled: True
-  become: True
+    enabled: true
+  become: true

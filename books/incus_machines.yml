@@ -21,16 +21,16 @@
       }}
 
   roles:
-  - role: cockpit
-  - role: letsencrypt
-  - role: incus
+    - role: cockpit
+    - role: letsencrypt
+    - role: incus
 
   tasks:
     - name: Pepare folders
       ansible.builtin.include_role:
         name: incus
         tasks_from: storage_paths
-      loop: "{{ 
+      loop: "{{
         groups['containers'] |
           map('extract', hostvars) |
           selectattr('parent_machine', 'equalto', hostname) |
@@ -42,23 +42,24 @@
     - name: List existing containers
       shell: incus list -c n -f csv | grep "ct-"
       register: existing_containers
+      changed_when: false
 
     - name: Build containers
       ansible.builtin.include_role:
         name: incus
         tasks_from: container
-      loop: "{{ 
+      loop: "{{
         groups['containers'] |
           map('extract', hostvars) |
           selectattr('parent_machine', 'equalto', hostname) |
           map('dict2items') |
           map(
             'selectattr', 'key', 'in', [
-              'hostname', 
-              'ansible_host', 
-              'visible_host', 
-              'internal_host', 
-              'storage_mnt', 
+              'hostname',
+              'ansible_host',
+              'visible_host',
+              'internal_host',
+              'storage_mnt',
               'incus_config'
             ]
           ) |

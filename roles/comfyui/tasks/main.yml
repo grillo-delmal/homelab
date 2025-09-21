@@ -2,7 +2,7 @@
 
 - name: Prepare services
   dnf:
-    name: 
+    name:
       - python
       - python3-pip
       - git
@@ -24,7 +24,7 @@
   shell:
     cmd: |
       python -m venv /opt/ComfyUI/venv
-    creates: 
+    creates:
       /opt/ComfyUI/venv
 
 - name: Install torch stuff
@@ -51,14 +51,15 @@
   shell:
     cmd: |
       mkdir -p /opt/comfyui_base_dir/models/{{ item.type }}/
-      curl -L '{{ item.url }}' -o '/opt/comfyui_base_dir/models/{{ item.type }}/{{ item.name }}'
+      curl -L '{{ item.url }}' \
+        -o '/opt/comfyui_base_dir/models/{{ item.type }}/{{ item.name }}'
     creates: /opt/comfyui_base_dir/models/{{ item.type }}/{{ item.name }}
   loop: '{{ comfyui_config.models }}'
 
-- name: Add ComfyUI.service 
+- name: Add ComfyUI.service
   ansible.builtin.copy:
-    src: ComfyUI.service 
-    dest: /usr/lib/systemd/system/ComfyUI.service 
+    src: ComfyUI.service
+    dest: /usr/lib/systemd/system/ComfyUI.service
     force: true
     mode: '0644'
   register: add_service_result
@@ -70,7 +71,6 @@
 
 - name: Start ComfyUI
   service:
-    name: ComfyUI.service 
+    name: ComfyUI.service
     enabled: true
     state: started
-
