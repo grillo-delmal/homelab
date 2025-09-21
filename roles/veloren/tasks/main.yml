@@ -98,4 +98,4 @@
     state: started
     recreate: true
     force_restart: true
-  when: get_image is changed
+  when: get_image is changed # noqa: no-handler

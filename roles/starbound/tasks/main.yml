@@ -70,7 +70,7 @@
 - name: Just force systemd to reread configs
   ansible.builtin.systemd_service:
     daemon_reload: true
-  when: add_service_result is changed
+  when: add_service_result is changed # noqa: no-handler
   notify:
     - 'starbound : Restart starbound service'
 
@@ -163,7 +163,7 @@
     owner: starbound
     group: starbound
     mode: '0644'
-  when: check_settings is changed
+  when: check_settings is changed # noqa: no-handler
   notify:
     - 'starbound : Restart starbound service'
 

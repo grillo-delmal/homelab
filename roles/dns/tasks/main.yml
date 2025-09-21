@@ -37,7 +37,7 @@
       }}{{
         "%02d" % ( ansible_date_time.hour | int )
       }}
-  when: raw_zone is changed
+  when: raw_zone is changed # noqa: no-handler
   notify:
     - 'dns : Restart named service'
 

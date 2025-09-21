@@ -37,7 +37,7 @@
 - name: Just force systemd to reread configs
   ansible.builtin.systemd_service:
     daemon_reload: true
-  when: add_service_result is changed
+  when: add_service_result is changed # noqa: no-handler
 
 - name: Configure bind
   ansible.builtin.template:

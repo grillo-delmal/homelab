@@ -1,0 +1,7 @@
+---
+
+- name: Restart ComfyUI
+  ansible.builtin.service:
+    name: ComfyUI.service
+    enabled: true
+    state: restarted
