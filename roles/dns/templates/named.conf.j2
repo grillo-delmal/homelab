@@ -1,12 +1,12 @@
 acl trusted {
-{% for item in dns.trusted %}
+{% for item in dns_config.trusted %}
     {{ item }};
 {% endfor %}
 };
 
 options {
     forwarders {
-{% for item in dns.forwarders %}
+{% for item in dns_config.forwarders %}
         {{ item }};
 {% endfor %}
     };
@@ -22,7 +22,7 @@ options {
     dnssec-validation no;
 };
 
-zone "{{ domain }}" IN {
+zone "{{ domain_name }}" IN {
     type master;
-    file "/var/named/{{ domain }}.zone";
+    file "/var/named/{{ domain_name }}.zone";
 };

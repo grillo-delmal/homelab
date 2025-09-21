@@ -3,13 +3,16 @@
 - name: Download mod
   ansible.builtin.get_url:
     url: '{{ item.url }}'
-    dest: "/opt/mods/{{ ( item.url | urlsplit('path') | split('/'))[-1] }}"
+    dest: "/opt/mods/{{ (item.url | urlsplit('path') | split('/'))[-1] }}"
   register: mod_archive
 
 - name: Install new mod
+  when: mod_archive is changed and not ansible_check_mode
+  notify:
+    - 'luanti : Restart minetest service'
   block:
     - name: Remove current version of the mod if exist
-      file:
+      ansible.builtin.file:
         path: "{{
             mine_home
           }}/{{
@@ -28,7 +31,7 @@
           }}/{{
             luanti_config.world.id
           }}/worldmods{{
-            ('/' + item.name ) if (item.create_folder | default(false)) else ''
+            ('/' + item.name) if (item.create_folder | default(false)) else ''
           }}"
         owner: minetest
         group: minetest
@@ -38,18 +41,15 @@
     - name: Mods is available
       become: true
       become_user: minetest
-      unarchive:
-        src: "/opt/mods/{{ ( item.url | urlsplit('path') | split('/'))[-1] }}"
+      ansible.builtin.unarchive:
+        src: "/opt/mods/{{ (item.url | urlsplit('path') | split('/'))[-1] }}"
         dest: "{{
             mine_home
           }}/{{
             luanti_config.world.id
           }}/worldmods{{
-            ('/' + item.name ) if (item.create_folder | default(false)) else ''
+            ('/' + item.name) if (item.create_folder | default(false)) else ''
           }}"
         owner: minetest
         group: minetest
         remote_src: true
-  when: mod_archive is changed and not ansible_check_mode
-  notify:
-    - 'luanti : Restart minetest service'

@@ -1,6 +1,6 @@
 ---
 
 - name: Restart open-webui service
-  service:
+  ansible.builtin.service:
     name: open-webui.service
     state: restarted

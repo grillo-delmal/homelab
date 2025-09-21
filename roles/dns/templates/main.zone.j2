@@ -1,8 +1,8 @@
 $TTL 2d
 
-$ORIGIN {{ domain }}.
+$ORIGIN {{ domain_name }}.
 
-@                   IN      SOA     ns.{{ domain }}.   info.{{ domain }}. (
+@                   IN      SOA     ns.{{ domain_name }}.   info.{{ domain_name }}. (
                                     {{ serial_num }}          ; serial
                                     12h                 ; refresh
                                     15m                 ; retry
@@ -10,19 +10,19 @@ $ORIGIN {{ domain }}.
                                     2h                  ; minimum ttl
                                     )
 
-                    IN      NS      ns.{{ domain }}.
+                    IN      NS      ns.{{ domain_name }}.
 
 ns                  IN      A       {{ ansible_host }}
 
 ; -- hosts
 
-{% for item in servers %}
+{% for item in dns_servers %}
 {{ item.hostname }}  IN      A       {{ item.ansible_host }}
 {% endfor %}
 
 ; -- container rules
 
-{% for item in containers %}
+{% for item in dns_containers %}
 {% if 'dns_list' in item %}
 {% for item2 in item.dns_list %}
 {{ item2 }}

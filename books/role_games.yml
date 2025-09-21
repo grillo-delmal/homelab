@@ -1,17 +1,21 @@
 ---
 
-- hosts: role_luanti
+- name: Setup luanti hosts
+  hosts: role_luanti
   roles:
     - role: luanti
 
-- hosts: role_veloren
+- name: Setup veloren hosts
+  hosts: role_veloren
   roles:
     - role: veloren
 
-- hosts: role_starbound
+- name: Setup starbound hosts
+  hosts: role_starbound
   roles:
     - role: starbound
 
-- hosts: role_mangband
+- name: Setup mangband hosts
+  hosts: role_mangband
   roles:
     - role: mangband

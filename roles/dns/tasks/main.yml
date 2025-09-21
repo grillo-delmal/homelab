@@ -1,18 +1,18 @@
 ---
 
 - name: Prepare services
-  dnf:
+  ansible.builtin.dnf:
     name:
       - bind
     state: present
 
 - name: Configure bind
-  template:
+  ansible.builtin.template:
     src: named.conf.j2
     dest: /etc/named.conf
 
 - name: Check if raw zone changes
-  template:
+  ansible.builtin.template:
     src: main.zone.j2
     dest: /var/raw.main.zone
   vars:
@@ -20,9 +20,9 @@
   register: raw_zone
 
 - name: Create real zone
-  template:
+  ansible.builtin.template:
     src: main.zone.j2
-    dest: /var/named/{{ domain }}.zone
+    dest: /var/named/{{ domain_name }}.zone
   vars:
     serial_num: >-
       {{
@@ -39,12 +39,12 @@
     - 'dns : Restart named service'
 
 - name: Get public IP
-  ipify_facts:
+  community.general.ipify_facts:
     timeout: 15
   tags: ddns
 
 - name: Set domain IP on CloudFlare
-  cloudflare_dns:
+  community.general.cloudflare_dns:
     zone: "{{ base_domain_name }}"
     record: "{{ domain_name }}"
     type: A
@@ -55,7 +55,7 @@
     state: present
 
 - name: Set *.domain IP on CloudFlare
-  cloudflare_dns:
+  community.general.cloudflare_dns:
     zone: "{{ base_domain_name }}"
     record: "*.{{ domain_name }}"
     type: A
@@ -68,7 +68,7 @@
     - 'dns : Restart named service'
 
 - name: BIND is started
-  systemd:
+  ansible.builtin.systemd:
     name: named.service
     state: started
     enabled: true

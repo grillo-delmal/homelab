@@ -1,20 +1,19 @@
 ---
 
 - name: Prepare services
-  dnf:
+  ansible.builtin.dnf:
     name:
       - podman
       - ramalama
-    state: latest
 
 - name: Check if ramalama is running
-  ansible.builtin.shell: podman container inspect local_ai
+  ansible.builtin.command: podman container inspect local_ai
   register: result
   ignore_errors: true
   changed_when: false
 
 - name: Run ramalama
-  ansible.builtin.shell: >-
+  ansible.builtin.command: >-
     ramalama serve -d
     -p 8080
     --name local_ai

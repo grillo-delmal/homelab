@@ -1,45 +1,44 @@
 ---
 
 - name: Prepare services
-  dnf:
+  ansible.builtin.dnf:
     name:
       - podman
-    state: latest
 
 - name: Adding traefik.yml file
-  template:
+  ansible.builtin.template:
     src: traefik.yml.j2
     dest: "/opt/traefik.yml"
-    mode: 0600
+    mode: '0600'
   notify:
     - 'traefik : Restart traefik container'
 
 - name: Ensure directories are present
-  file:
+  ansible.builtin.file:
     path: '/opt/config/'
     state: directory
     mode: '0744'
 
 - name: Adding dashboard file
-  template:
+  ansible.builtin.template:
     src: dashboard.yml.j2
     dest: "/opt/config/dashboard.yml"
-    mode: 0600
+    mode: '0600'
 
 - name: Adding config files to configured containers
   ansible.builtin.copy:
     dest: "/opt/config/{{ item.hostname }}-config.yml"
     content: "{{ item.traefik_config | to_yaml }}"
-    mode: 0600
+    mode: '0600'
   when: "'traefik_config' in item"
-  loop: '{{ targets }}'
+  loop: '{{ traefik_targets }}'
 
 - name: Remove config files for unconfigured containers
-  file:
+  ansible.builtin.file:
     dest: "/opt/config/{{ item.hostname }}-config.yml"
     state: absent
   when: "'traefik_config' not in item"
-  loop: '{{ targets }}'
+  loop: '{{ traefik_targets }}'
 
 - name: Run traefik
   containers.podman.podman_container:

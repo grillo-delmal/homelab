@@ -1,9 +1,15 @@
 ---
 # Private apps
-- import_playbook: books/incus_machines.yml
-- import_playbook: books/incus_containers.yml
-- import_playbook: books/role_infra.yml
+- name: Setup incus in host machines
+  import_playbook: books/incus_machines.yml
+- name: Setup containers
+  import_playbook: books/incus_containers.yml
+- name: Setup basic infrastructure
+  import_playbook: books/role_infra.yml
 # Public apps
-- import_playbook: books/role_ai.yml
-- import_playbook: books/role_apps.yml
-- import_playbook: books/role_games.yml
+- name: AI related apps
+  import_playbook: books/role_ai.yml
+- name: General apps
+  import_playbook: books/role_apps.yml
+- name: Games ^^
+  import_playbook: books/role_games.yml

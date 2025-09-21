@@ -1,34 +1,33 @@
 ---
 
 - name: Prepare services
-  dnf:
+  ansible.builtin.dnf:
     name:
       - python
       - python3-pip
       - git
       - libglvnd-glx
-    state: latest
 
 - name: Install ComfyUI
-  git:
+  ansible.builtin.git:
     repo: https://github.com/comfyanonymous/ComfyUI.git
     dest: /opt/ComfyUI
     version: v0.3.56
 
 - name: Fix pip
-  shell: pip install packaging
-  register: result
-  changed_when: not result.stdout.startswith("Requirement already satisfied:")
+  ansible.builtin.pip:
+    name:
+      - packaging
 
 - name: Install venv
-  shell:
+  ansible.builtin.shell:
     cmd: |
       python -m venv /opt/ComfyUI/venv
     creates:
       /opt/ComfyUI/venv
 
 - name: Install torch stuff
-  pip:
+  ansible.builtin.pip:
     name:
       - torch
       - torchvision
@@ -37,18 +36,18 @@
     virtualenv: /opt/ComfyUI/venv
 
 - name: Install requirements
-  pip:
+  ansible.builtin.pip:
     requirements: /opt/ComfyUI/requirements.txt
     virtualenv: /opt/ComfyUI/venv
 
 - name: Install Unload Model Node
-  git:
+  ansible.builtin.git:
     repo: https://github.com/SeanScripts/ComfyUI-Unload-Model
     dest: /opt/comfyui_base_dir/custom_nodes/ComfyUI-Unload-Model
     version: main
 
 - name: Install models
-  shell:
+  ansible.builtin.shell:
     cmd: |
       mkdir -p /opt/comfyui_base_dir/models/{{ item.type }}/
       curl -L '{{ item.url }}' \
@@ -70,7 +69,7 @@
   when: add_service_result is changed
 
 - name: Start ComfyUI
-  service:
+  ansible.builtin.service:
     name: ComfyUI.service
     enabled: true
     state: started

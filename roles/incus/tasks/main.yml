@@ -1,6 +1,6 @@
 ---
 - name: Incus dependencies
-  dnf:
+  ansible.builtin.dnf:
     name:
       - incus
       - dpkg
@@ -8,7 +8,7 @@
 
 # Make sure webui is up
 - name: Check if the path exists
-  stat:
+  ansible.builtin.stat:
     path: '/opt/incus/ui/index.html'
   register: incus_webui_installed
 
@@ -72,18 +72,18 @@
 
 # Add ssl cert if exists
 - name: Check src chain
-  stat:
+  ansible.builtin.stat:
     path: "/etc/letsencrypt/certs/fullchain_{{ letsencrypt_domain_name }}.pem"
   register: src_chain_status
 
 # - name: Check dest chain
-#   stat:
+#   ansible.builtin.stat:
 #     path: '/etc/pve/nodes/{{ hostname }}/pveproxy-ssl.pem'
 #   register: dest_chain_status
 
 # FIXME
 # - name: Set new cert chain
-#   shell: >-
+#   ansible.builtin.shell: >-
 #     cp -f
 #     "/etc/letsencrypt/certs/fullchain_{{ letsencrypt_domain_name }}.pem"
 #     '/etc/pve/nodes/{{ hostname }}/pveproxy-ssl.pem'
@@ -97,17 +97,17 @@
 #   register: new_chain
 
 - name: Check src key
-  stat:
+  ansible.builtin.stat:
     path: "/etc/letsencrypt/keys/{{ letsencrypt_domain_name }}.key"
   register: src_key_status
 
 # - name: Check dest key
-#   stat:
+#   ansible.builtin.stat:
 #     path: '/etc/pve/nodes/{{ hostname }}/pveproxy-ssl.key'
 #   register: dest_key_status
 
 # - name: Set new cert key
-#   shell: >-
+#   ansible.builtin.shell: >-
 #     cp -f
 #     "/etc/letsencrypt/keys/{{ letsencrypt_domain_name }}.key"
 #     '/etc/pve/nodes/{{ hostname }}/pveproxy-ssl.key'
@@ -153,18 +153,19 @@
 
 # Cockpit host
 - name: Generate an OpenSSH keypair with the default values (4096 bits, rsa)
-  openssh_keypair:
+  community.crypto.openssh_keypair:
     path: /root/.ssh/id_rsa
     owner: root
     group: root
 
 - name: Fix owner of the generated pub key
-  file:
+  ansible.builtin.file:
     path: /root/.ssh/id_rsa.pub
     owner: root
     group: root
 
-- command: "cat /root/.ssh/id_rsa.pub"
+- name: Check pub key
+  ansible.builtin.command: "cat /root/.ssh/id_rsa.pub"
   changed_when: false
   failed_when: false
   register: pubkey_result
@@ -174,7 +175,7 @@
     master_pubkey: "{{ pubkey_result.stdout }}"
 
 - name: Set as a Cockpit Hub
-  copy:
+  ansible.builtin.copy:
     dest: /etc/cockpit/cockpit.conf
     content: |
       [WebService]
@@ -202,7 +203,7 @@
   when: 'mount_options is changed or mount_options is failed'
 
 - name: Make sure quotas are enabled
-  shell: btrfs quota enable {{ btrfs_storage.path }}
+  ansible.builtin.command: btrfs quota enable {{ btrfs_storage.path }}
   changed_when: false
 
 - name: Prepare all subvolumes

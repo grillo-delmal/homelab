@@ -6,15 +6,16 @@
 
   tasks:
     - name: Upgrade Debian and Ubuntu systems with apt
+      when: ansible_os_family == "Debian"
       block:
-        - name: dist-upgrade
+        - name: Upgrade dist
           ansible.builtin.apt:
             upgrade: dist
             update_cache: true
           register: upgrade_result
 
         - name: Debain check if reboot is required
-          shell: "[ -f /var/run/reboot-required ]"
+          ansible.builtin.shell: "[ -f /var/run/reboot-required ]"
           failed_when: false
           register: debian_reboot_required
           changed_when: debian_reboot_required.rc == 0
@@ -31,11 +32,11 @@
             msg: |
               Upgrade Result: {{ upgrade_result }}
               Autoremove Result: {{ autoremove_result }}
-      when: ansible_os_family == "Debian"
 
     - name: Upgrade RHEL systems with DNF
+      when: ansible_os_family == "RedHat"
       block:
-        - name: Get packages that can be upgraded with DNF
+        - name: Get packages that can be upgraded with DNF # noqa: package-latest
           ansible.builtin.dnf:
             list: upgrades
             state: latest
@@ -50,7 +51,7 @@
                 | list
               }}"
 
-        - name: Upgrade packages with DNF
+        - name: Upgrade packages with DNF # noqa: package-latest
           become: true
           ansible.builtin.dnf:
             name: '*'
@@ -64,62 +65,13 @@
             msg: "Packages upgrade failed"
           when: reg_upgrade_ok is not defined
 
-        - name: Install dnf-utils
+        - name: Install dnf-utils # noqa: package-latest
           become: true
           ansible.builtin.dnf:
             name: 'dnf-utils'
             state: latest
             update_cache: true
           when: reg_dnf_output_all is defined
-
-      when: ansible_os_family == "RedHat" and not (
-        ansible_distribution_major_version == "7")
-
-    - name: Upgrade legacy RHEL systems with YUM
-      block:
-        - name: Get packages that can be upgraded with YUM
-          ansible.builtin.yum:
-            list: upgrades
-            state: latest
-            update_cache: true
-          register: reg_yum_output_all
-
-        - name: List packages that can be upgraded with YUM
-          ansible.builtin.debug:
-            msg: "{{
-                reg_yum_output_all.results |
-                map(attribute='name') |
-                list
-              }}"
-
-        - name: Upgrade packages with YUM
-          become: true
-          ansible.builtin.yum:
-            name: '*'
-            state: latest
-            update_cache: true
-            update_only: false
-          register: reg_yum_upgrade_ok
-
-        - name: Print YUM errors if upgrade failed
-          ansible.builtin.debug:
-            msg: "Packages upgrade failed"
-          when: reg_yum_upgrade_ok is not defined
-
-        - name: Check legacy RHEL system if a reboot is required
-          become: true
-          command: needs-restarting -r
-          register: reg_reboot_required
-          ignore_errors: true
-          failed_when: false
-          changed_when: reg_reboot_required.rc != 0
-          notify:
-            - Reboot server
-      when: (
-          ansible_os_family == "RedHat"
-        ) and (
-          ansible_distribution_major_version == "7"
-        )
 
   handlers:
     - name: Reboot server

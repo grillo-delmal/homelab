@@ -1,11 +1,10 @@
 ---
 
 - name: Prepare services
-  dnf:
+  ansible.builtin.dnf:
     name:
       - podman
       # - git
-    state: latest
 
 # - name: Git checkout
 #   ansible.builtin.git:
@@ -51,7 +50,7 @@
     mode: '0644'
 
 - name: Config settings
-  template:
+  ansible.builtin.template:
     src: '{{ item }}.j2'
     dest: "/opt/userdata/server/server_config/{{ item }}"
   loop:

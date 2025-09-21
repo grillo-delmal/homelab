@@ -1,7 +1,7 @@
 ---
 
 - name: Prepare services
-  dnf:
+  ansible.builtin.dnf:
     name:
       - cockpit
       - cockpit-ws
@@ -11,11 +11,10 @@
       - cockpit-podman
       - cockpit-networkmanager
       - cockpit-storaged
-    state: latest
   become: true
 
 - name: Start cockpit
-  service:
+  ansible.builtin.service:
     name: cockpit.socket
     state: started
     enabled: true

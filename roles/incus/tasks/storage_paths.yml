@@ -1,12 +1,12 @@
 ---
 
-- name: Check if path {{ btrfs_storage.path }}{{ mount_data_path }} exist
-  stat:
+- name: Create path {{ btrfs_storage.path + mount_data_path }}
+  ansible.builtin.stat:
     path: '{{ btrfs_storage.path }}{{ mount_data_path }}'
   register: register_name
   ignore_errors: true
 
-- name: Path {{ btrfs_storage.path }}{{ mount_data_path }} must exist
+- name: Create path {{ btrfs_storage.path + mount_data_path }}
   ansible.builtin.file:
     path: '{{ btrfs_storage.path }}{{ mount_data_path }}'
     state: directory

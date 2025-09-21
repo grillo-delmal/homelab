@@ -1,6 +1,7 @@
 ---
 
-- hosts: containers
+- name: Setup incus containers
+  hosts: containers
 
   tasks:
     # Setup Firewall
@@ -12,7 +13,7 @@
       register: current_rules
 
     - name: Set default zone if defined
-      shell: |
+      ansible.builtin.shell: |
         if [ "$(firewall-cmd --get-default-zone)" == "{{
           firewalld_rules.default }}" ]
         then
@@ -36,8 +37,7 @@
             offline: true
             state: disabled
           loop: "{{ current_rules.firewalld_info.zones['trusted'].rich_rules }}"
-          when: (
-            firewalld_rules is not defined or
+          when: (firewalld_rules is not defined or
             firewalld_rules.internal is not defined or
             item not in firewalld_rules.internal)
 
@@ -50,11 +50,8 @@
             offline: true
             state: enabled
           loop: "{{ firewalld_rules.internal }}"
-          when: (
-              firewalld_rules is defined
-            ) and (
-              firewalld_rules.internal is defined
-            )
+          when: (firewalld_rules is defined) and
+            (firewalld_rules.internal is defined)
 
     - name: External rules
       block:
@@ -70,8 +67,7 @@
           loop: "{{
               current_rules.firewalld_info.zones['external'].rich_rules
             }}"
-          when: (
-            firewalld_rules is not defined or
+          when: (firewalld_rules is not defined or
             firewalld_rules.external is not defined or
             item not in firewalld_rules.external)
 
@@ -84,24 +80,21 @@
             offline: true
             state: enabled
           loop: "{{ firewalld_rules.external }}"
-          when: (
-              firewalld_rules is defined
-            ) and (
-              firewalld_rules.external is defined
-            )
+          when: (firewalld_rules is defined) and
+            (firewalld_rules.external is defined)
 
     - name: Outgoing rules
       block:
 
         - name: Check if outgoing-rules policy exists
-          shell: |
+          ansible.builtin.shell: |
             firewall-cmd --permanent --policy outgoing-rules --list-rich-rules
           failed_when: false
           changed_when: false
           register: current_rules
 
         - name: Create policy for outgoing traffic
-          shell: |
+          ansible.builtin.shell: |
             firewall-cmd --permanent \
               --new-policy outgoing-rules
             firewall-cmd --permanent \
@@ -113,31 +106,27 @@
             firewall-cmd --permanent \
               --policy outgoing-rules \
               --set-target ACCEPT
-          when: (
-            firewalld_rules is defined and
+          when: (firewalld_rules is defined and
             firewalld_rules.outgoing is defined and
             (firewalld_rules.outgoing | length) > 0 and
             current_rules.rc != 0)
           register: created_policy
 
         - name: Filter out outgoing traffic
-          shell: |
+          ansible.builtin.command: |
             firewall-cmd --permanent --delete-policy outgoing-rules
-          when: (
-              firewalld_rules is not defined or
+          when: (firewalld_rules is not defined or
               firewalld_rules.outgoing is not defined or
-              (firewalld_rules.outgoing | length) == 0
-            ) and current_rules.rc == 0
+              (firewalld_rules.outgoing | length) == 0) and current_rules.rc == 0
           register: removed_policy
 
         - name: Remove inexistent rules
-          shell: >-
+          ansible.builtin.command: >-
             firewall-cmd --permanent
             --policy outgoing-rules
             --remove-rich-rule='{{ item }}'
           loop: "{{ current_rules.stdout_lines }}"
-          when: (
-            current_rules.rc == 0 and
+          when: (current_rules.rc == 0 and
             firewalld_rules is defined and
             firewalld_rules.outgoing is defined and
             (firewalld_rules.outgoing | length) > 0 and
@@ -145,26 +134,22 @@
           register: removed_rules_checker
 
         - name: Add specific rules to outgoing rules
-          shell: >-
+          ansible.builtin.command: >-
             firewall-cmd --permanent
             --policy outgoing-rules
             --add-rich-rule='{{ item }}'
           loop: "{{ firewalld_rules.outgoing }}"
-          when: (
-            firewalld_rules is defined and
+          when: (firewalld_rules is defined and
             firewalld_rules.outgoing is defined and
             (firewalld_rules.outgoing | length) > 0 and
-            (
-              current_rules.rc != 0 or
-              item not in current_rules.stdout_lines
-            ))
+            (current_rules.rc != 0 or
+              item not in current_rules.stdout_lines))
           register: added_rules_checker
 
         - name: Save and refresh new rule
-          shell: |
+          ansible.builtin.shell: |
             firewall-cmd --reload
-          when: (
-            created_policy is changed or
+          when: (created_policy is changed or
             removed_policy is changed or
             removed_rules_checker is changed or
             added_rules_checker is changed)

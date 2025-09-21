@@ -1,11 +1,11 @@
 ---
 
 - name: Restart forgejo service
-  service:
+  ansible.builtin.service:
     name: forgejo.service
     state: restarted
 
 - name: Restart sshd service
-  service:
+  ansible.builtin.service:
     name: sshd.service
     state: restarted

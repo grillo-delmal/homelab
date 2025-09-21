@@ -1,65 +1,67 @@
 ---
 
 - name: Get info from ct-{{ container.hostname }}
-  command: incus info ct-{{ container.hostname }}
+  ansible.builtin.command: incus info ct-{{ container.hostname }}
   changed_when: false
   failed_when: false
   register: incus_info
 
 - name: Copy input template
-  template:
+  ansible.builtin.template:
     src: config.stdin.j2
     dest: /tmp/config.stdin
   changed_when: false
 
 - name: Copy auth keys template
-  template:
+  ansible.builtin.template:
     src: authorized_keys.j2
     dest: /tmp/authorized_keys
   changed_when: false
 
 - name: Copy initial network config for eth0
-  template:
+  ansible.builtin.template:
     src: eth0.network.j2
     dest: /tmp/eth0.network
   changed_when: false
 
 - name: Copy initial network config for eth1
-  template:
+  ansible.builtin.template:
     src: eth1.network.j2
     dest: /tmp/eth1.network
   changed_when: false
 
 - name: Copy kickstart script
-  template:
+  ansible.builtin.template:
     src: kickstart.sh.j2
     dest: /tmp/kickstart.sh
   changed_when: false
 
-- name: Container ct-{{ container.hostname }} already exists
+- name: Container already exists ct-{{ container.hostname }}
+  when: incus_info.rc == 0
   block:
     # TODO: Check if the container needs to be updated or rebuilt
-    - debug:
+    - name: Nothing needs to be done :D
+      ansible.builtin.debug:
         msg: "YAY!!!"
-  when: incus_info.rc == 0
 
-- name: Container ct-{{ container.hostname }} needs to be created
+- name: Container needs to be created ct-{{ container.hostname }}
+  when: incus_info.rc != 0
   block:
 
     - name: Make sure there is no trusted host with the same ip
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: /etc/ssh/ssh_known_hosts
         state: absent
         regexp: '^(# )?{{ container.ansible_host | replace(".", "\.") }}\D'
 
     - name: Make sure there is no trusted host with the same ip
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: /root/.ssh/known_hosts
         state: absent
         regexp: '^(# )?{{ container.ansible_host | replace(".", "\.") }}\D'
 
     - name: Run setup on ct-{{ container.hostname }}
-      shell: |
+      ansible.builtin.shell: |
         incus create \
           images:fedora/42/default ct-{{ container.hostname }} \
           < /tmp/config.stdin
@@ -88,7 +90,7 @@
         incus start ct-{{ container.hostname }}
 
     - name: Wait for container to be active and to have an active connection
-      ansible.builtin.shell: >-
+      ansible.builtin.command: >-
         incus exec
         ct-{{ container.hostname }}
         --
@@ -99,7 +101,7 @@
       delay: 5    # Delay in seconds between retries
 
     - name: Install stuff on the containers
-      ansible.builtin.shell: >-
+      ansible.builtin.command: >-
         incus exec
         ct-{{ container.hostname }}
         /opt/kickstart.sh
@@ -112,8 +114,8 @@
         delay: 5
         timeout: 120
 
-    - name: Check if ct-{{ container.hostname }} is a trusted machine
-      command: >-
+    - name: Check if container is a trusted machine ct-{{ container.hostname }}
+      ansible.builtin.command: >-
         ssh-keygen
         -F {{ container.ansible_host }}
         -f /etc/ssh/ssh_known_hosts
@@ -121,20 +123,20 @@
       failed_when: false
       register: trust_process
 
-    - name: Add ct-{{ container.hostname }} to trusted list
-      shell: >-
-        ssh-keyscan
-        {{ container.ansible_host }}
-        >>
+    - name: Add container to trusted list ct-{{ container.hostname }}
+      ansible.builtin.shell: >-
+        ssh-keyscan {{ container.ansible_host }} >>
         /etc/ssh/ssh_known_hosts
       when: trust_process.rc != 0
 
-    - name: Add ct-{{ container.hostname }} to trusted list
-      shell: ssh-keyscan {{ container.ansible_host }} >> /root/.ssh/known_hosts
+    - name: Add container to known machines ct-{{ container.hostname }}
+      ansible.builtin.shell: >-
+        ssh-keyscan {{ container.ansible_host }} >>
+        /root/.ssh/known_hosts
       when: trust_process.rc != 0
 
-    - name: Add ct-{{ container.hostname }} to cockpit machines
-      copy:
+    - name: Add container to cockpit machines ct-{{ container.hostname }}
+      ansible.builtin.copy:
         dest: /etc/cockpit/machines.d/10-ct-{{ container.hostname }}.json
         content: |
           {
@@ -145,4 +147,3 @@
             }
           }
       when: trust_process.rc != 0
-  when: incus_info.rc != 0

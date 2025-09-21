@@ -1,6 +1,6 @@
 ---
 
 - name: Restart starbound service
-  service:
+  ansible.builtin.service:
     name: starbound.service
     state: restarted

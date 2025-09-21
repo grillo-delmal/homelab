@@ -1,23 +1,23 @@
 ---
-- name: account key path must exist
+- name: Create account key path
   ansible.builtin.file:
     path: "{{ letsencrypt_account_key | dirname }}"
     state: directory
     mode: '0755'
 
-- name: key dir path must exist
+- name: Create key dir path
   ansible.builtin.file:
     path: "{{ letsencrypt_keys_dir }}"
     state: directory
     mode: '0755'
 
-- name: csrs dir path must exist
+- name: Create csrs dir path
   ansible.builtin.file:
     path: "{{ letsencrypt_csrs_dir }}"
     state: directory
     mode: '0755'
 
-- name: certs dir path must exist
+- name: Create certs dir path
   ansible.builtin.file:
     path: "{{ letsencrypt_certs_dir }}"
     state: directory
@@ -57,7 +57,7 @@
     account_key_src: "{{ letsencrypt_account_key }}"
     account_email: "{{ letsencrypt_email }}"
     terms_agreed: 1
-    challenge: "{{ letsencrypt_challenge_type | replace('_','-') }}"
+    challenge: "{{ letsencrypt_challenge_type | replace('_', '-') }}"
     csr: "{{ letsencrypt_csrs_dir }}/{{ letsencrypt_domain_name }}.csr"
     dest: "{{ letsencrypt_certs_dir }}/{{ letsencrypt_domain_name }}.pem"
     fullchain_dest: "{{ letsencrypt_certs_dir }}/fullchain_{{ letsencrypt_domain_name }}.pem"
@@ -73,7 +73,7 @@
     acme_version: "{{ letsencrypt_version }}"
     account_key_src: "{{ letsencrypt_account_key }}"
     account_email: "{{ letsencrypt_email }}"
-    challenge: "{{ letsencrypt_challenge_type | replace('_','-') }}"
+    challenge: "{{ letsencrypt_challenge_type | replace('_', '-') }}"
     csr: "{{ letsencrypt_csrs_dir }}/{{ letsencrypt_domain_name }}.csr"
     dest: "{{ letsencrypt_certs_dir }}/{{ letsencrypt_domain_name }}.pem"
     chain_dest: "{{ letsencrypt_certs_dir }}/chain_{{ letsencrypt_domain_name }}.pem"

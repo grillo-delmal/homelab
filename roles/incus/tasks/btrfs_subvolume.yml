@@ -1,12 +1,12 @@
 ---
 
-- name: Submodule {{ btrfs_storage.path }}{{ storage_data.path }} is created
+- name: Submodule is created {{ btrfs_storage.path + storage_data.path }}
   community.general.btrfs_subvolume:
     name: '{{ storage_data.path }}'
     filesystem_device: '{{ btrfs_storage.device }}'
 
 - name: Get current qgroup
-  shell: >-
+  ansible.builtin.shell: >-
     btrfs
     qgroup show -reF --iec
     {{ btrfs_storage.path }}{{ storage_data.path }} |
@@ -16,7 +16,7 @@
   changed_when: false
 
 - name: Get current size
-  shell: >-
+  ansible.builtin.shell: >-
     btrfs
     qgroup show -reF --iec
     {{ btrfs_storage.path }}{{ storage_data.path }} |
@@ -26,13 +26,13 @@
   changed_when: false
 
 - name: Get configured size
-  shell: "echo {{ storage_data.size }} | numfmt --from=iec"
+  ansible.builtin.shell: "echo {{ storage_data.size }} | numfmt --from=iec"
   register: expected_size
   changed_when: false
   when: "'size' in storage_data"
 
 - name: Resize on existing size config {{ qgroupid.stdout }}
-  shell: >-
+  ansible.builtin.command: >-
     btrfs
     qgroup limit {{ storage_data.size }}
     {{ qgroupid.stdout }}
@@ -43,7 +43,7 @@
     )"
 
 - name: No limit when no size config
-  shell: >-
+  ansible.builtin.command: >-
     btrfs
     qgroup
     limit 'none'

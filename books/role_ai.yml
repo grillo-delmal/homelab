@@ -1,13 +1,16 @@
 ---
 
-- hosts: role_ramalama
+- name: Setup ramalama hosts
+  hosts: role_ramalama
   roles:
     - role: ramalama
 
-- hosts: role_comfyui
+- name: Setup comfyui hosts
+  hosts: role_comfyui
   roles:
     - role: comfyui
 
-- hosts: role_openwebui
+- name: Setup openwebui hosts
+  hosts: role_openwebui
   roles:
     - role: openwebui

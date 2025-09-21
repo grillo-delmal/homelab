@@ -1,11 +1,10 @@
 ---
 
 - name: Prepare services
-  dnf:
+  ansible.builtin.dnf:
     name:
       - podman
       - git
-    state: latest
 
 - name: Download code
   ansible.builtin.git:

@@ -1,11 +1,11 @@
 ---
 
 - name: Restart minetest service
-  service:
+  ansible.builtin.service:
     name: minetest@{{ luanti_config.world.id }}.service
     state: restarted
 
 - name: Restart mapserver service
-  service:
+  ansible.builtin.service:
     name: mapserver@{{ luanti_config.world.id }}.service
     state: restarted

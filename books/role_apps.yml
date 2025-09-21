@@ -1,9 +1,11 @@
 ---
 
-- hosts: role_maruchan
+- name: Setup maruchan hosts
+  hosts: role_maruchan
   roles:
     - role: maruchan
 
-- hosts: role_jupyter
+- name: Setup jupyter hosts
+  hosts: role_jupyter
   roles:
     - role: jupyter

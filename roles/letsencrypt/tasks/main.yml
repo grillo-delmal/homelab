@@ -1,12 +1,12 @@
 ---
 - name: Let's Encrypt deps on apt
-  apt:
+  ansible.builtin.apt:
     name: python3-cryptography
     state: present
   when: ansible_os_family == "Debian"
 
 - name: Let's Encrypt deps on dnf
-  dnf:
+  ansible.builtin.dnf:
     name: python3-cryptography
     state: present
   when: ansible_os_family == "RedHat"

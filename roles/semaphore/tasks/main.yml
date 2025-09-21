@@ -1,7 +1,7 @@
 ---
 
 - name: Enable COPR on dnf
-  dnf:
+  ansible.builtin.dnf:
     name:
       - dnf
       - dnf-plugins-core
@@ -13,7 +13,7 @@
     name: grillo-delmal/semaphore
 
 - name: Install semaphore and deps
-  dnf:
+  ansible.builtin.dnf:
     name:
       - semaphore
       - git
@@ -33,8 +33,8 @@
     daemon_reload: true
   when: add_service_result is changed
 
-- name: var folder exists
-  file:
+- name: Check that var folder exists
+  ansible.builtin.file:
     path: "/var/lib/semaphore"
     state: directory
     owner: semaphore
@@ -42,40 +42,40 @@
     mode: '0750'
 
 - name: Make sure permissions are fine
-  file:
+  ansible.builtin.file:
     dest: /var/lib/semaphore
     owner: semaphore
     group: semaphore
     recurse: true
 
 - name: Check if config.json exists
-  stat:
+  ansible.builtin.stat:
     path: '/var/lib/semaphore'
   register: config_file
 
 - name: Initialize semaphore
+  when: "'stat' in config_file and not config_file.stat.exists"
   block:
     - name: Copy input template
-      template:
+      ansible.builtin.template:
         src: semaphore.stdin.j2
         owner: semaphore
         group: semaphore
         mode: '0640'
         dest: /opt/semaphore.stdin
     - name: Run setup
-      shell: >-
+      ansible.builtin.shell: >-
         sudo -u semaphore
         semaphore setup
         --config /var/lib/semaphore/config.json
         < /opt/semaphore.stdin
     - name: Remove stdin file
-      file:
+      ansible.builtin.file:
         path: "/opt/semaphore.stdin"
         state: absent
-  when: "'stat' in config_file and not config_file.stat.exists"
 
 - name: Start semaphoreui service
-  service:
+  ansible.builtin.service:
     name: semaphoreui-alt.service
     enabled: true
     state: started

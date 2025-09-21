@@ -1,7 +1,7 @@
 ---
 
 - name: Enable COPR on dnf
-  dnf:
+  ansible.builtin.dnf:
     name:
       - dnf
       - dnf-plugins-core
@@ -13,28 +13,27 @@
     name: grillo-delmal/wg-portal
 
 - name: Prepare services
-  dnf:
+  ansible.builtin.dnf:
     name:
       - wg-portal
       - git
       - wireguard-tools
       - net-tools
-    state: latest
 
 - name: Folder exists
-  file:
+  ansible.builtin.file:
     path: "/var/lib/wg-portal/config/"
     state: directory
 
 - name: Upload the config.yml file
-  template:
+  ansible.builtin.template:
     src: config.yml.j2
     dest: "/var/lib/wg-portal/config/config.yml"
   notify:
     - 'wgportal : Restart wgportal service'
 
 - name: Start service
-  service:
+  ansible.builtin.service:
     name: wg-portal.service
     enabled: true
     state: started

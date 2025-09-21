@@ -1,6 +1,7 @@
 ---
 
-- hosts: machines
+- name: Setup incus hosts
+  hosts: machines
   vars:
     general:
       pubkey: "{{ ssh_pub_keys[0] }}"
@@ -40,7 +41,7 @@
         loop_var: mount_data_path
 
     - name: List existing containers
-      shell: incus list -c n -f csv | grep "ct-"
+      ansible.builtin.shell: incus list -c n -f csv | grep "ct-"
       register: existing_containers
       changed_when: false
 
@@ -53,16 +54,13 @@
           map('extract', hostvars) |
           selectattr('parent_machine', 'equalto', hostname) |
           map('dict2items') |
-          map(
-            'selectattr', 'key', 'in', [
-              'hostname',
+          map('selectattr', 'key', 'in',
+            ['hostname',
               'ansible_host',
               'visible_host',
               'internal_host',
               'storage_mnt',
-              'incus_config'
-            ]
-          ) |
+              'incus_config']) |
           map('items2dict')
          }}"
       loop_control:

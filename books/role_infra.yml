@@ -1,11 +1,10 @@
 ---
 
-- hosts: role_dns
+- name: Setup dns hosts
+  hosts: role_dns
   roles:
     - role: dns
-      domain: "{{ domain_name }}"
-      dns: "{{ dns_config }}"
-      servers: |
+      dns_servers: |
         {{
           groups['machines'] |
             map('extract', hostvars) |
@@ -13,7 +12,7 @@
             map('selectattr', 'key', 'in', ['ansible_host', 'hostname']) |
             map('items2dict')
         }}
-      containers: |
+      dns_containers: |
         {{
           groups['containers'] |
             map('extract', hostvars) |
@@ -22,10 +21,11 @@
             map('items2dict')
         }}
 
-- hosts: role_traefik
+- name: Setup traefik hosts
+  hosts: role_traefik
   roles:
     - role: traefik
-      targets: |
+      traefik_targets: |
         {{
           groups['all'] |
             map('extract', hostvars) |
@@ -34,14 +34,17 @@
             map('items2dict')
         }}
 
-- hosts: role_wgportal
+- name: Setup wireguard hosts
+  hosts: role_wgportal
   roles:
     - role: wgportal
 
-- hosts: role_forgejo
+- name: Setup forgejo hosts
+  hosts: role_forgejo
   roles:
     - role: forgejo
 
-- hosts: role_semaphore
+- name: Setup semaphore hosts
+  hosts: role_semaphore
   roles:
     - role: semaphore

@@ -1,6 +1,6 @@
 ---
 
 - name: Restart wgportal service
-  service:
+  ansible.builtin.service:
     name: wg-portal.service
     state: restarted
