@@ -39,6 +39,10 @@
       loop_control:
         loop_var: mount_data_path
 
+    - name: List existing containers
+      shell: incus list -c n -f csv | grep "ct-"
+      register: existing_containers
+
     - name: Build containers
       ansible.builtin.include_role:
         name: incus
@@ -62,3 +66,4 @@
          }}"
       loop_control:
         loop_var: container
+      when: ('ct-' + container.hostname) not in existing_containers.stdout_lines
