@@ -11,6 +11,7 @@
   ansible.builtin.template:
     src: mangband.conf.j2
     dest: /etc/mangband.conf
+    mode: '0644'
 
 - name: Start server
   ansible.builtin.service:

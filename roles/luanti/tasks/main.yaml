@@ -38,6 +38,7 @@
       ansible.builtin.file:
         path: /opt/mapserver
         state: directory
+        mode: '0755'
 
     # yamllint disable rule:line-length
     - name: Install mapserver
@@ -53,6 +54,7 @@
       ansible.builtin.copy:
         src: mapserver@.service
         dest: "/etc/systemd/system/mapserver@.service"
+        mode: '0644'
       register: add_service_result
 
     - name: Just force systemd to reread configs
@@ -90,6 +92,7 @@
     state: directory
     owner: minetest
     group: minetest
+    mode: '0755'
 
 - name: Install unzip
   ansible.builtin.dnf:
@@ -106,6 +109,7 @@
     state: directory
     owner: minetest
     group: minetest
+    mode: '0755'
 
 - name: Download game
   ansible.builtin.get_url:
@@ -113,6 +117,7 @@
     dest: "/opt/games/{{
         (luanti_config.game.url | urlsplit('path') | split('/'))[-1]
       }}"
+    mode: '0644'
   register: game_archive
 
 - name: Install new game
@@ -161,6 +166,7 @@
     state: directory
     owner: minetest
     group: minetest
+    mode: '0755'
 
 - name: Mods are available
   ansible.builtin.include_tasks: mods.yaml
@@ -173,6 +179,7 @@
       PORT={{ luanti_config.world.port }}
       GAMEID={{ luanti_config.game.name }}
     dest: "{{ mine_sysconfig }}"
+    mode: '0644'
   notify:
     - 'luanti : Restart minetest service'
 
@@ -183,6 +190,7 @@
     owner: minetest
     group: minetest
     backup: true
+    mode: '0644'
   notify:
     - 'luanti : Restart minetest service'
 
@@ -203,6 +211,7 @@
         dest: "{{ mine_home }}/{{ luanti_config.world.id }}/test.mapserver.json"
         owner: minetest
         group: minetest
+        mode: '0644'
       register: mapserver_canary
 
     - name: Configure mapserver port
@@ -213,6 +222,7 @@
         dest: "{{ mine_home }}/{{ luanti_config.world.id }}/mapserver.json"
         owner: minetest
         group: minetest
+        mode: '0644'
       when: mapserver_canary is changed
       notify:
         - 'luanti : Restart mapserver service'

@@ -17,18 +17,21 @@
   ansible.builtin.get_url:
     url: "https://pkgs.zabbly.com/incus/stable/pool/main/i/incus/incus-ui-canonical_6.13-ubuntu24.04-202506210432_arm64.deb"
     dest: "/opt/incus-ui-canonical.deb"
+    mode: '0644'
   when: not incus_webui_installed.stat.exists
 # yamllint enable rule:line-length
 
 - name: Extract the deb into a folder
   ansible.builtin.command: 'dpkg -x /opt/incus-ui-canonical.deb /opt/incus-ui/'
   when: not incus_webui_installed.stat.exists
+  changed_when: true
 
 - name: Move ui to propper path
   ansible.builtin.copy:
     remote_src: true
     src: /opt/incus-ui/opt/incus
     dest: /opt
+    mode: '0755'
   when: not incus_webui_installed.stat.exists
 
 - name: Create path
@@ -57,6 +60,7 @@
 - name: Set config
   ansible.builtin.command: 'incus config set core.https_address :8443'
   when: not incus_webui_installed.stat.exists
+  changed_when: true
 
 - name: Permit traffic in default zone on port 8443/tcp
   ansible.posix.firewalld:
@@ -69,6 +73,7 @@
 - name: Set incus config
   ansible.builtin.command: 'incus config set core.https_address :8443'
   when: not incus_webui_installed.stat.exists
+  changed_when: true
 
 # Add ssl cert if exists
 - name: Check src chain
@@ -180,6 +185,7 @@
     content: |
       [WebService]
       AllowMultiHost=true
+    mode: '0644'
 
 # BTRFS
 

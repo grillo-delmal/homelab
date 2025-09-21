@@ -111,6 +111,7 @@
             (firewalld_rules.outgoing | length) > 0 and
             current_rules.rc != 0)
           register: created_policy
+          changed_when: true
 
         - name: Filter out outgoing traffic
           ansible.builtin.command: |
@@ -119,6 +120,7 @@
               firewalld_rules.outgoing is not defined or
               (firewalld_rules.outgoing | length) == 0) and current_rules.rc == 0
           register: removed_policy
+          changed_when: true
 
         - name: Remove inexistent rules
           ansible.builtin.command: >-
@@ -132,6 +134,7 @@
             (firewalld_rules.outgoing | length) > 0 and
             item not in firewalld_rules.outgoing)
           register: removed_rules_checker
+          changed_when: true
 
         - name: Add specific rules to outgoing rules
           ansible.builtin.command: >-
@@ -145,6 +148,7 @@
             (current_rules.rc != 0 or
               item not in current_rules.stdout_lines))
           register: added_rules_checker
+          changed_when: true
 
         - name: Save and refresh new rule
           ansible.builtin.shell: |
@@ -153,3 +157,4 @@
             removed_policy is changed or
             removed_rules_checker is changed or
             added_rules_checker is changed)
+          changed_when: true

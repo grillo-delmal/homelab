@@ -18,4 +18,5 @@
     -p 8080
     --name local_ai
     {{ ai_model | default('llama3.2:3b') }}
+  changed_when: true
   when: result is failed

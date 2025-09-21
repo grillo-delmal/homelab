@@ -24,11 +24,13 @@
   ansible.builtin.file:
     path: "/var/lib/wg-portal/config/"
     state: directory
+    mode: '0755'
 
 - name: Upload the config.yml file
   ansible.builtin.template:
     src: config.yml.j2
     dest: "/var/lib/wg-portal/config/config.yml"
+    mode: '0644'
   notify:
     - 'wgportal : Restart wgportal service'
 

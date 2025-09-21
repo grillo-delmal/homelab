@@ -100,6 +100,7 @@
     --email {{ forgejo_config.admin.email }}
     --admin
   when: admin_user_query is failed
+  changed_when: true
   no_log: true
 
 - name: Change permissions

@@ -43,6 +43,7 @@
   ansible.builtin.template:
     src: open-webui.env.j2
     dest: /opt/open-webui.env
+    mode: '0644'
 
 - name: Start open-webui
   ansible.builtin.service:

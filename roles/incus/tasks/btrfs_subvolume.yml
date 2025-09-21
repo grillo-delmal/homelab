@@ -6,27 +6,32 @@
     filesystem_device: '{{ btrfs_storage.device }}'
 
 - name: Get current qgroup
-  ansible.builtin.shell: >-
-    btrfs
-    qgroup show -reF --iec
-    {{ btrfs_storage.path }}{{ storage_data.path }} |
-    sed -n 3p |
-    awk '{print $1}'
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      btrfs qgroup show -reF --iec \
+          {{ btrfs_storage.path }}{{ storage_data.path }} | \
+        sed -n 3p | \
+        awk '{print $1}'
   register: qgroupid
   changed_when: false
 
 - name: Get current size
-  ansible.builtin.shell: >-
-    btrfs
-    qgroup show -reF --iec
-    {{ btrfs_storage.path }}{{ storage_data.path }} |
-    sed -n 3p |
-    awk '{print $4}'
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      btrfs qgroup show -reF --iec \
+          {{ btrfs_storage.path }}{{ storage_data.path }} | \
+        sed -n 3p | \
+        awk '{print $4}'
   register: max_referenced
   changed_when: false
 
 - name: Get configured size
-  ansible.builtin.shell: "echo {{ storage_data.size }} | numfmt --from=iec"
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      echo {{ storage_data.size }} | numfmt --from=iec
   register: expected_size
   changed_when: false
   when: "'size' in storage_data"

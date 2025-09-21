@@ -53,6 +53,7 @@
   ansible.builtin.template:
     src: '{{ item }}.j2'
     dest: "/opt/userdata/server/server_config/{{ item }}"
+    mode: '0644'
   loop:
     - admins.ron
     - banlist.ron

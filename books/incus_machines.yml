@@ -41,7 +41,10 @@
         loop_var: mount_data_path
 
     - name: List existing containers
-      ansible.builtin.shell: incus list -c n -f csv | grep "ct-"
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          incus list -c n -f csv | grep "ct-"
       register: existing_containers
       changed_when: false
 

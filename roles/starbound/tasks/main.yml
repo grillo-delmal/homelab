@@ -45,6 +45,7 @@
   ansible.builtin.file:
     path: "/steamcmd"
     state: directory
+    mode: '0755'
 
 - name: Check if SteamCMD exists
   ansible.builtin.stat:
@@ -63,6 +64,7 @@
   ansible.builtin.copy:
     src: starbound.service
     dest: "/etc/systemd/system/starbound.service"
+    mode: '0644'
   register: add_service_result
 
 - name: Just force systemd to reread configs
@@ -98,11 +100,13 @@
     state: directory
     owner: starbound
     group: starbound
+    mode: '0755'
 
 - name: Check game data path must exist
   ansible.builtin.file:
     path: "/check"
     state: directory
+    mode: '0755'
 
 - name: Run check process
   ansible.builtin.expect:
@@ -149,6 +153,7 @@
   ansible.builtin.template:
     src: starbound_server.config.j2
     dest: /opt/starbound_server.config
+    mode: '0644'
   register: check_settings
 
 - name: Set server settings
@@ -157,6 +162,7 @@
     dest: /starbound/storage/starbound_server.config
     owner: starbound
     group: starbound
+    mode: '0644'
   when: check_settings is changed
   notify:
     - 'starbound : Restart starbound service'

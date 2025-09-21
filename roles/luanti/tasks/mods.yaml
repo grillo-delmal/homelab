@@ -4,6 +4,7 @@
   ansible.builtin.get_url:
     url: '{{ item.url }}'
     dest: "/opt/mods/{{ (item.url | urlsplit('path') | split('/'))[-1] }}"
+    mode: '0644'
   register: mod_archive
 
 - name: Install new mod

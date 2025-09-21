@@ -10,11 +10,13 @@
   ansible.builtin.template:
     src: named.conf.j2
     dest: /etc/named.conf
+    mode: '0644'
 
 - name: Check if raw zone changes
   ansible.builtin.template:
     src: main.zone.j2
     dest: /var/raw.main.zone
+    mode: '0644'
   vars:
     serial_num: '0'
   register: raw_zone
@@ -23,6 +25,7 @@
   ansible.builtin.template:
     src: main.zone.j2
     dest: /var/named/{{ domain_name }}.zone
+    mode: '0644'
   vars:
     serial_num: >-
       {{

@@ -10,30 +10,35 @@
   ansible.builtin.template:
     src: config.stdin.j2
     dest: /tmp/config.stdin
+    mode: '0644'
   changed_when: false
 
 - name: Copy auth keys template
   ansible.builtin.template:
     src: authorized_keys.j2
     dest: /tmp/authorized_keys
+    mode: '0644'
   changed_when: false
 
 - name: Copy initial network config for eth0
   ansible.builtin.template:
     src: eth0.network.j2
     dest: /tmp/eth0.network
+    mode: '0644'
   changed_when: false
 
 - name: Copy initial network config for eth1
   ansible.builtin.template:
     src: eth1.network.j2
     dest: /tmp/eth1.network
+    mode: '0644'
   changed_when: false
 
 - name: Copy kickstart script
   ansible.builtin.template:
     src: kickstart.sh.j2
     dest: /tmp/kickstart.sh
+    mode: '0644'
   changed_when: false
 
 - name: Container already exists ct-{{ container.hostname }}
@@ -88,6 +93,7 @@
           /tmp/kickstart.sh \
           ct-{{ container.hostname }}/opt/kickstart.sh --mode 0755
         incus start ct-{{ container.hostname }}
+      changed_when: true
 
     - name: Wait for container to be active and to have an active connection
       ansible.builtin.command: >-
@@ -99,12 +105,14 @@
       until: service_status.rc == 0
       retries: 30  # Number of retries
       delay: 5    # Delay in seconds between retries
+      changed_when: true
 
     - name: Install stuff on the containers
       ansible.builtin.command: >-
         incus exec
         ct-{{ container.hostname }}
         /opt/kickstart.sh
+      changed_when: true
 
     - name: Wait 120 seconds for port 22 to become open and contain "OpenSSH"
       ansible.builtin.wait_for:
@@ -128,11 +136,13 @@
         ssh-keyscan {{ container.ansible_host }} >>
         /etc/ssh/ssh_known_hosts
       when: trust_process.rc != 0
+      changed_when: true
 
     - name: Add container to known machines ct-{{ container.hostname }}
       ansible.builtin.shell: >-
         ssh-keyscan {{ container.ansible_host }} >>
         /root/.ssh/known_hosts
+      changed_when: true
       when: trust_process.rc != 0
 
     - name: Add container to cockpit machines ct-{{ container.hostname }}
@@ -146,4 +156,5 @@
               "user": "root"
             }
           }
+        mode: '0644'
       when: trust_process.rc != 0
