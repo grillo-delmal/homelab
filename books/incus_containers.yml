@@ -47,7 +47,7 @@
             offline: true
             state: enabled
           loop: "{{ firewalld_rules.internal }}"
-          when: firewalld_rules is defined and firewalld_rules.trusted is defined
+          when: firewalld_rules is defined and firewalld_rules.internal is defined
 
     - name: External rules
       block:
