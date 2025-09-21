@@ -24,6 +24,9 @@
   pip:
     name: open-webui
     virtualenv: /opt/open-webui-venv
+    state: latest
+  notify:
+    - 'openwebui : Restart open-webui service'
 
 - name: Add open-webui.service 
   ansible.builtin.copy:
