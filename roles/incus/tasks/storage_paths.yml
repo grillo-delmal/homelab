@@ -3,7 +3,7 @@
 - name: Create path {{ btrfs_storage.path + mount_data_path }}
   ansible.builtin.stat:
     path: '{{ btrfs_storage.path }}{{ mount_data_path }}'
-  register: register_name
+  register: incus_register_name
   ignore_errors: true
 
 - name: Create path {{ btrfs_storage.path + mount_data_path }}
@@ -11,4 +11,4 @@
     path: '{{ btrfs_storage.path }}{{ mount_data_path }}'
     state: directory
     mode: '0755'
-  when: "'stat' in register_name and not register_name.stat.exists"
+  when: "'stat' in incus_register_name and not incus_register_name.stat.exists"

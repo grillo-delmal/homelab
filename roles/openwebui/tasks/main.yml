@@ -23,6 +23,7 @@
   ansible.builtin.pip:
     name: open-webui
     virtualenv: /opt/open-webui-venv
+    state: latest # noqa: package-latest
   notify:
     - 'openwebui : Restart open-webui service'
 
@@ -32,12 +33,12 @@
     dest: /usr/lib/systemd/system/open-webui.service
     force: true
     mode: '0644'
-  register: add_service_result
+  register: openwebui_add_service_result
 
 - name: Just force systemd to reread configs
   ansible.builtin.systemd_service:
     daemon_reload: true
-  when: add_service_result is changed # noqa: no-handler
+  when: openwebui_add_service_result is changed # noqa: no-handler
 
 - name: Configure bind
   ansible.builtin.template:

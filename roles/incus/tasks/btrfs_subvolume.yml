@@ -13,7 +13,7 @@
           {{ btrfs_storage.path }}{{ storage_data.path }} | \
         sed -n 3p | \
         awk '{print $1}'
-  register: qgroupid
+  register: incus_qgroupid
   changed_when: false
 
 - name: Get current size
@@ -24,7 +24,7 @@
           {{ btrfs_storage.path }}{{ storage_data.path }} | \
         sed -n 3p | \
         awk '{print $4}'
-  register: max_referenced
+  register: incus_max_referenced
   changed_when: false
 
 - name: Get configured size
@@ -32,19 +32,19 @@
     cmd: |
       set -o pipefail
       echo {{ storage_data.size }} | numfmt --from=iec
-  register: expected_size
+  register: incus_expected_size
   changed_when: false
   when: "'size' in storage_data"
 
-- name: Resize on existing size config {{ qgroupid.stdout }}
+- name: Resize on existing size config {{ incus_qgroupid.stdout }}
   ansible.builtin.command: >-
     btrfs
     qgroup limit {{ storage_data.size }}
-    {{ qgroupid.stdout }}
+    {{ incus_qgroupid.stdout }}
     {{ btrfs_storage.path }}{{ storage_data.path }}
   changed_when: false
   when: "'size' in storage_data and (
-      ( max_referenced.stdout | int ) != ( expected_size.stdout | int )
+      ( incus_max_referenced.stdout | int ) != ( incus_expected_size.stdout | int )
     )"
 
 - name: No limit when no size config
@@ -52,9 +52,9 @@
     btrfs
     qgroup
     limit 'none'
-    {{ qgroupid.stdout }}
+    {{ incus_qgroupid.stdout }}
     {{ btrfs_storage.path }}{{ storage_data.path }}
   changed_when: false
   when: "'size' not in storage_data and (
-      max_referenced.stdout != 'none'
+      incus_max_referenced.stdout != 'none'
     )"

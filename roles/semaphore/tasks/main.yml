@@ -26,12 +26,12 @@
     dest: /usr/lib/systemd/system/semaphoreui-alt.service
     force: true
     mode: '0644'
-  register: add_service_result
+  register: semaphore_add_service_result
 
 - name: Just force systemd to reread configs
   ansible.builtin.systemd_service:
     daemon_reload: true
-  when: add_service_result is changed # noqa: no-handler
+  when: semaphore_add_service_result is changed # noqa: no-handler
 
 - name: Check that var folder exists
   ansible.builtin.file:
@@ -51,10 +51,10 @@
 - name: Check if config.json exists
   ansible.builtin.stat:
     path: '/var/lib/semaphore'
-  register: config_file
+  register: semaphore_config_file
 
 - name: Initialize semaphore
-  when: "'stat' in config_file and not config_file.stat.exists"
+  when: "'stat' in semaphore_config_file and not semaphore_config_file.stat.exists"
   block:
     - name: Copy input template
       ansible.builtin.template:

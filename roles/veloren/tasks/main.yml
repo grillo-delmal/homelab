@@ -65,7 +65,7 @@
   containers.podman.podman_image:
     name: registry.gitlab.com/veloren/veloren/server-cli:weekly
     force: true
-  register: get_image
+  register: veloren_get_image
 
 - name: Run veloren
   containers.podman.podman_container:
@@ -80,7 +80,7 @@
     volumes:
       - "/opt/userdata:/opt/userdata"
     state: started
-  when: get_image is not changed
+  when: veloren_get_image is not changed
 
 - name: Run veloren, restart if running
   containers.podman.podman_container:
@@ -98,4 +98,4 @@
     state: started
     recreate: true
     force_restart: true
-  when: get_image is changed # noqa: no-handler
+  when: veloren_get_image is changed # noqa: no-handler

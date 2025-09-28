@@ -48,7 +48,7 @@ disallow_empty_password = true
 
 # If mapserver mod is installed, use generated key
 {% if luanti_config.mapserver %}
-mapserver.key = {{ mapserver_secretkey }}
+mapserver.key = {{ luanti_mapserver_secretkey }}
 {% endif %}
 
 {% if 'settings' in luanti_config.world %}

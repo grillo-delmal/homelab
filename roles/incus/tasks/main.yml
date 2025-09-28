@@ -79,7 +79,7 @@
 - name: Check src chain
   ansible.builtin.stat:
     path: "/etc/letsencrypt/certs/fullchain_{{ letsencrypt_domain_name }}.pem"
-  register: src_chain_status
+  register: incus_src_chain_status
 
 # - name: Check dest chain
 #   ansible.builtin.stat:
@@ -92,11 +92,11 @@
 #     cp -f
 #     "/etc/letsencrypt/certs/fullchain_{{ letsencrypt_domain_name }}.pem"
 #     '/etc/pve/nodes/{{ hostname }}/pveproxy-ssl.pem'
-#   when: src_chain_status.stat.exists and (
+#   when: incus_src_chain_status.stat.exists and (
 #       (
 #         not dest_chain_status.stat.exists
 #       ) or (
-#         src_chain_status.stat.checksum != dest_chain_status.stat.checksum
+#         incus_src_chain_status.stat.checksum != dest_chain_status.stat.checksum
 #       )
 #     )
 #   register: new_chain
@@ -104,7 +104,7 @@
 - name: Check src key
   ansible.builtin.stat:
     path: "/etc/letsencrypt/keys/{{ letsencrypt_domain_name }}.key"
-  register: src_key_status
+  register: incus_src_key_status
 
 # - name: Check dest key
 #   ansible.builtin.stat:
@@ -116,11 +116,11 @@
 #     cp -f
 #     "/etc/letsencrypt/keys/{{ letsencrypt_domain_name }}.key"
 #     '/etc/pve/nodes/{{ hostname }}/pveproxy-ssl.key'
-#   when: src_key_status.stat.exists and (
+#   when: incus_src_key_status.stat.exists and (
 #       (
 #         not dest_key_status.stat.exists
 #       ) or (
-#         src_key_status.stat.checksum != dest_key_status.stat.checksum
+#         incus_src_key_status.stat.checksum != dest_key_status.stat.checksum
 #       )
 #     )
 #   register: new_key
@@ -173,11 +173,11 @@
   ansible.builtin.command: "cat /root/.ssh/id_rsa.pub"
   changed_when: false
   failed_when: false
-  register: pubkey_result
+  register: incus_pubkey_result
 
 - name: Set master pubkey as fact
   ansible.builtin.set_fact:
-    master_pubkey: "{{ pubkey_result.stdout }}"
+    incus_master_pubkey: "{{ incus_pubkey_result.stdout }}"
 
 - name: Set as a Cockpit Hub
   ansible.builtin.copy:
@@ -196,7 +196,7 @@
     fstype: btrfs
     opts: rw,degraded
     state: mounted
-  register: mount_options
+  register: incus_mount_options
   ignore_errors: true
 
 - name: Remount now if options are not correct
@@ -206,7 +206,7 @@
     fstype: btrfs
     opts: rw,degraded
     state: remounted
-  when: 'mount_options is changed or mount_options is failed'
+  when: 'incus_mount_options is changed or incus_mount_options is failed'
 
 - name: Make sure quotas are enabled
   ansible.builtin.command: btrfs quota enable {{ btrfs_storage.path }}

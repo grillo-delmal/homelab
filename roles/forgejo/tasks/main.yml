@@ -41,7 +41,7 @@
     owner: root
     group: forgejo
     mode: '0640'
-  register: ini_process
+  register: forgejo_ini_process
 
 - name: Upload the app.ini file if test changed
   ansible.builtin.template:
@@ -50,7 +50,7 @@
     owner: root
     group: forgejo
     mode: '0660'
-  when: ini_process is changed # noqa: no-handler
+  when: forgejo_ini_process is changed # noqa: no-handler
   notify:
     - 'forgejo : Restart forgejo service'
 
@@ -72,8 +72,8 @@
       }}://127.0.0.1:{{
         forgejo_config.app.server.http_port | default(3000)
       }}"
-  register: result
-  until: "result.status == 200"
+  register: forgejo_result
+  until: "forgejo_result.status == 200"
   retries: 5
   delay: 2
 
@@ -85,7 +85,7 @@
     admin user list --admin |
     awk '{print $2}' |
     grep -w {{ forgejo_config.admin.username }}
-  register: admin_user_query
+  register: forgejo_admin_user_query
   changed_when: false
   ignore_errors: true
 
@@ -99,7 +99,7 @@
     --password {{ forgejo_config.admin.password }}
     --email {{ forgejo_config.admin.email }}
     --admin
-  when: admin_user_query is failed
+  when: forgejo_admin_user_query is failed
   changed_when: true
   no_log: true
 

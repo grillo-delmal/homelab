@@ -61,12 +61,12 @@
     dest: /usr/lib/systemd/system/ComfyUI.service
     force: true
     mode: '0644'
-  register: add_service_result
+  register: comfyui_add_service_result
 
 - name: Just force systemd to reread configs
   ansible.builtin.systemd_service:
     daemon_reload: true
-  when: add_service_result is changed # noqa: no-handler
+  when: comfyui_add_service_result is changed # noqa: no-handler
   notify:
     - 'comfyui : Restart ComfyUI'
 

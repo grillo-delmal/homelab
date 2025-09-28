@@ -25,19 +25,19 @@
       maruchan_config |
         to_json(indent=4, sort_keys=True) }}"
     mode: '0644'
-  register: config_change
+  register: maruchan_config_change
 
 - name: Build Image
   containers.podman.podman_image:
     name: localhost/maruchan
     path: /opt/maruchan-discordbot
-  register: image_built
+  register: maruchan_image_built
 
 - name: Stop maruchan if image built
   containers.podman.podman_container:
     name: maruchan
     state: absent
-  when: image_built is changed or config_change is changed
+  when: maruchan_image_built is changed or maruchan_config_change is changed
 
 - name: Run maruchan
   containers.podman.podman_container:

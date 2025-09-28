@@ -3,7 +3,7 @@
 # yamllint disable rule:line-length
 - name: Create .well-known/acme-challenge directory
   ansible.builtin.file:
-    path: "{{ letsencrypt_http01_webroot }}/{{ r_acme_challenge['challenge_data'][letsencrypt_domain_name]['http-01']['resource'] | ansible.builtin.dirname }}"
+    path: "{{ letsencrypt_http01_webroot }}/{{ letsencrypt_r_acme_challenge['challenge_data'][letsencrypt_domain_name]['http-01']['resource'] | ansible.builtin.dirname }}"
     state: directory
     owner: root
     group: root
@@ -11,8 +11,8 @@
 
 - name: Implement http-01 challenge files
   ansible.builtin.copy:
-    content: "{{ r_acme_challenge['challenge_data'][letsencrypt_domain_name]['http-01']['resource_value'] }}"
-    dest: "{{ letsencrypt_http01_webroot }}/{{ r_acme_challenge['challenge_data'][letsencrypt_domain_name]['http-01']['resource'] }}"
+    content: "{{ letsencrypt_r_acme_challenge['challenge_data'][letsencrypt_domain_name]['http-01']['resource_value'] }}"
+    dest: "{{ letsencrypt_http01_webroot }}/{{ letsencrypt_r_acme_challenge['challenge_data'][letsencrypt_domain_name]['http-01']['resource'] }}"
     owner: root
     group: root
     mode: u=rw,g=r,o=r

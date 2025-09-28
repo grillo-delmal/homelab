@@ -15,7 +15,7 @@
   when: not letsencrypt_force_renew
   block:
     - name: Check if cert exists
-      register: r_crt_check
+      register: letsencrypt_r_crt_check
       ansible.builtin.stat:
         path: "{{
             letsencrypt_certs_dir
@@ -24,8 +24,8 @@
           }}.pem"
 
     - name: Check validity of existing cert
-      when: r_crt_check.stat.exists
-      register: r_crt_info
+      when: letsencrypt_r_crt_check.stat.exists
+      register: letsencrypt_r_crt_info
       community.crypto.x509_certificate_info:
         path: "{{
             letsencrypt_certs_dir
@@ -37,9 +37,9 @@
 
     - name: "Generate cert for {{ letsencrypt_domain_name }}"
       when: (
-          not r_crt_check.stat.exists
+          not letsencrypt_r_crt_check.stat.exists
         ) or (
-          not r_crt_info.valid_at.one_month|default(false)
+          not letsencrypt_r_crt_info.valid_at.one_month|default(false)
         )
       ansible.builtin.include_tasks: generate_crt.yml
 

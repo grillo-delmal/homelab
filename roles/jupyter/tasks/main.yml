@@ -47,13 +47,13 @@
   containers.podman.podman_image:
     name: localhost/jupyter-local-image
     path: /opt/jupyter-local
-  register: image_built
+  register: jupyter_image_built
 
 - name: Stop jupyter if image built
   containers.podman.podman_container:
     name: jupyter-local
     state: absent
-  when: image_built is changed # noqa: no-handler
+  when: jupyter_image_built is changed # noqa: no-handler
 
 - name: Run jupyter
   containers.podman.podman_container:

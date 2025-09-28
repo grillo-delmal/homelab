@@ -50,7 +50,7 @@
     common_name: "{{ letsencrypt_domain_name }}"
 
 - name: Begin Let's Encrypt challenges
-  register: r_acme_challenge
+  register: letsencrypt_r_acme_challenge
   community.crypto.acme_certificate:
     acme_directory: "{{ letsencrypt_directory }}"
     acme_version: "{{ letsencrypt_version }}"
@@ -78,7 +78,7 @@
     dest: "{{ letsencrypt_certs_dir }}/{{ letsencrypt_domain_name }}.pem"
     chain_dest: "{{ letsencrypt_certs_dir }}/chain_{{ letsencrypt_domain_name }}.pem"
     fullchain_dest: "{{ letsencrypt_certs_dir }}/fullchain_{{ letsencrypt_domain_name }}.pem"
-    data: "{{ r_acme_challenge }}"
+    data: "{{ letsencrypt_r_acme_challenge }}"
 # yamllint enable rule:line-length
 
 - name: Cleanup dns-01 challenge implementation

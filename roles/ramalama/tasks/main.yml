@@ -8,7 +8,7 @@
 
 - name: Check if ramalama is running
   ansible.builtin.command: podman container inspect local_ai
-  register: result
+  register: ramalama_result
   ignore_errors: true
   changed_when: false
 
@@ -19,4 +19,4 @@
     --name local_ai
     {{ ai_model | default('llama3.2:3b') }}
   changed_when: true
-  when: result is failed
+  when: ramalama_result is failed

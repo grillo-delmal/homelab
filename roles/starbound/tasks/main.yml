@@ -50,7 +50,7 @@
 - name: Check if SteamCMD exists
   ansible.builtin.stat:
     path: '/steamcmd/steamcmd.sh'
-  register: steamcmd_file
+  register: starbound_steamcmd_file
   ignore_errors: true
 
 - name: Install SteamCMD
@@ -58,19 +58,19 @@
     src: "https://media.steampowered.com/installer/steamcmd_linux.tar.gz"
     dest: "/steamcmd"
     remote_src: true
-  when: "'stat' in steamcmd_file and not steamcmd_file.stat.exists"
+  when: "'stat' in starbound_steamcmd_file and not starbound_steamcmd_file.stat.exists"
 
 - name: Add starbound.service
   ansible.builtin.copy:
     src: starbound.service
     dest: "/etc/systemd/system/starbound.service"
     mode: '0644'
-  register: add_service_result
+  register: starbound_add_service_result
 
 - name: Just force systemd to reread configs
   ansible.builtin.systemd_service:
     daemon_reload: true
-  when: add_service_result is changed # noqa: no-handler
+  when: starbound_add_service_result is changed # noqa: no-handler
   notify:
     - 'starbound : Restart starbound service'
 
@@ -116,16 +116,16 @@
       "password:":
         - "EXIT!"
   changed_when: false
-  register: check_output
+  register: starbound_check_output
 
 - name: See if there was any change
   ansible.builtin.set_fact:
-    check_updated: true
+    starbound_check_updated: true
   when: "'Update state (0x101)' in item"
-  loop: "{{ check_output.stdout_lines }}"
+  loop: "{{ starbound_check_output.stdout_lines }}"
 
 - name: Update
-  when: check_updated is true
+  when: starbound_check_updated is true
   block:
     - name: Set /starbound to root
       ansible.builtin.file:
@@ -154,7 +154,7 @@
     src: starbound_server.config.j2
     dest: /opt/starbound_server.config
     mode: '0644'
-  register: check_settings
+  register: starbound_check_settings
 
 - name: Set server settings
   ansible.builtin.template:
@@ -163,7 +163,7 @@
     owner: starbound
     group: starbound
     mode: '0644'
-  when: check_settings is changed # noqa: no-handler
+  when: starbound_check_settings is changed # noqa: no-handler
   notify:
     - 'starbound : Restart starbound service'
 

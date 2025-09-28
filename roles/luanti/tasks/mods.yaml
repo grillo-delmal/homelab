@@ -5,17 +5,17 @@
     url: '{{ item.url }}'
     dest: "/opt/mods/{{ (item.url | urlsplit('path') | split('/'))[-1] }}"
     mode: '0644'
-  register: mod_archive
+  register: luanti_mod_archive
 
 - name: Install new mod
-  when: mod_archive is changed and not ansible_check_mode
+  when: luanti_mod_archive is changed and not ansible_check_mode
   notify:
     - 'luanti : Restart minetest service'
   block:
     - name: Remove current version of the mod if exist
       ansible.builtin.file:
         path: "{{
-            mine_home
+            luanti_mine_home
           }}/{{
             luanti_config.world.id
           }}/worldmods/{{
@@ -28,7 +28,7 @@
       become_user: minetest
       ansible.builtin.file:
         path: "{{
-            mine_home
+            luanti_mine_home
           }}/{{
             luanti_config.world.id
           }}/worldmods{{
@@ -45,7 +45,7 @@
       ansible.builtin.unarchive:
         src: "/opt/mods/{{ (item.url | urlsplit('path') | split('/'))[-1] }}"
         dest: "{{
-            mine_home
+            luanti_mine_home
           }}/{{
             luanti_config.world.id
           }}/worldmods{{
